@@ -128,7 +128,6 @@ and put them back into the training set to be a 20/80 split.
 ## More information
 In the project there is also included a `slides.pdf` file which describes the _tau_decay_ problem and work on this topic by @jeaner. This is just to provide more information on the topic. Ths full work and @jeaner's solution to the competition can be found [here](https://github.com/Punchyou/PracticumPhysics).
 
-# Submission
 - The JH1101620 was my final submission file to kaggle
 ### The file "FinalModels" ends with my final two models for my prediction.
 GBC1.pkl and GBC2.pkl are my saved models.
