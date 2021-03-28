@@ -89,19 +89,21 @@ Symmetries are also crucial to the structure of the Standard Model of particle p
 [Standard Model](https://en.wikipedia.org/wiki/Physics_beyond_the_Standard_Model#/media/File:Standard_Model_of_Elementary_Particles_+_Gravity.svg)
 Interestingly, in many proposed extensions to the Standard Model, this symmetry doesn’t exist, implying decays that do not conserve lepton flavour are possible. One decay searched for at the LHC is τ → μμμ (or τ → 3μ). Observation of this decay would be a clear indication of the violation of lepton flavour and a sign of long-sought new physics.
 
-## How to help solving the problem
+In the competition, canditated are given a list of collision events and their properties. The goal is to predict whether a τ → 3μ decay happened in this collision. This τ → 3μ is currently assumed by scientists not to happen, and the goal of this competition is to discover τ → 3μ happening more frequently than scientists currently can understand. 
 
-There are available real data from the [LHCb experiment](https://lhcb-public.web.cern.ch/) at the LHC, mixed with simulated datasets of the decay (the data are explained below in more detail). The metric used in this challenge includes checks that physicists do in their analysis to make sure the results are unbiased. These checks have been built into the solution design to help ensure that the results will be useful for physicists in future studies. 
+Keep in mind that this is a machine learning problem for something we have never observed before. Scientists at CERN developed the designs described in the [Data]() section to achieve the goal.
 
 ## Resources
 * [Flavour of Physics, Research Documentation](https://storage.googleapis.com/kaggle-competitions/kaggle/4488/media/lhcb_description_official.pdf)
 * [Roel Aaij et al., Search for the lepton flavour violating decay τ → µµµ, 2015, JHEP, 1502:121, 2015](https://arxiv.org/pdf/1409.8548.pdf)
 * [New approaches for boosting to uniformity](https://iopscience.iop.org/article/10.1088/1748-0221/10/03/T03002/pdf)
 
-## Data
-In this competition, you are given a list of collision events and their properties. You will then predict whether a τ → 3μ decay happened in this collision. This τ → 3μ is currently assumed by scientists not to happen, and the goal of this competition is to discover τ → 3μ happening more frequently than scientists currently can understand. The datasets are available at th competition's [Data Page](https://www.kaggle.com/c/flavours-of-physics/data).
+## How to help solving the problem
 
-It is challenging to design a machine learning problem for something you have never observed before. Scientists at CERN developed the following designs to achieve the goal.
+There are available real data from the [LHCb experiment](https://lhcb-public.web.cern.ch/) at the LHC, mixed with simulated datasets of the decay (the data are explained below in more detail). The metric used in this challenge includes checks that physicists do in their analysis to make sure the results are unbiased. These checks have been built into the solution design to help ensure that the results will be useful for physicists in future studies. 
+
+## Data
+The following datasets are available at the competition's [Data Page](https://www.kaggle.com/c/flavours-of-physics/data).
 
 ### `training.csv`
 
@@ -181,7 +183,6 @@ This dataset contains simulated and real events from the Control channel Ds → 
 check_correlation.csv
 
 This dataset contains only real background events recorded at LHCb to evaluate your submission correlation with mass locally. It contains the same columns as test.csv and mass column to check correlation with. For more details see correlation test.
-
 
 You can use the [`kaggle api`](https://github.com/Kaggle/kaggle-api) to donwload the dataset (you will need to have a kaggle account and to agree with the [competition](https://www.kaggle.com/c/flavours-of-physics/overview)'s agreement to use this):
 ```sh
