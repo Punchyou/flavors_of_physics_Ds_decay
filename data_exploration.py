@@ -1,5 +1,10 @@
 import pandas as pd
-from utils import subplot_correlation_matrix, plot_heatmap
+from utils import (
+    subplot_correlation_matrix,
+    plot_heatmap,
+    display_components,
+    create_transform
+)
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
@@ -87,74 +92,20 @@ len(components_95per_var) # 19 coponents
 components_95per_var[:9].sum() # 0.82
 # TODO do the above for test set too
 
-# TODO check notebook on kmeans after pca to see the transformation
-
-
-def display_component(pca_fitted_model, num_of_components, features_list,
-                      component_number, n_weights_to_display=10):
-
-    # get index of component (last row - component_num)
-    row_idx = num_of_components - component_number
-
-    components_makeup = pd.DataFrame(pca_fitted_model.components_)
-    # get the list of weights from a row in v, dataframe
-    v_1_row = components_makeup.iloc[:, row_idx]
-    v_1 = np.squeeze(v_1_row.values)
-
-    # match weights to features in counties_scaled dataframe
-    comps = pd.DataFrame(list(zip(v_1, features_list)), 
-                         columns=['weights', 'features'])
-
-    # we'll want to sort by the largest n_weights
-    # weights can be neg/pos and we'll sort by magnitude
-    comps['abs_weights'] = comps['weights'].apply(lambda x: np.abs(x))
-    sorted_weight_data = comps.sort_values('abs_weights',
-                                           ascending=False).head(n_weights_to_display)
-
-    # display using seaborn
-    ax = plt.subplots(figsize=(10, 6))
-    ax = sns.barplot(data=sorted_weight_data,
-                     x="weights",
-                     y="features",
-                     palette="Blues_d")
-    ax.set_title("PCA Component Makeup, Component #" + str(component_number))
-    plt.show()
 
 # now create the reansformed training set
-# create dimensionality-reduced data
-def create_transformed_df(pca_components, scaled_train_df, num_of_components, n_top_components):
-    ''' Return a dataframe of data points with component features. 
-        The dataframe should be indexed by State-County and contain component values.
-        :param train_pca: A list of pca training data, returned by a PCA model.
-        :param counties_scaled: A dataframe of normalized, original features.
-        :param n_top_components: An integer, the number of top components to use.
-        :return: A dataframe, indexed by State-County, with n_top_component values as columns.        
-     '''
-    # create new dataframe to add data to
-    df=pd.DataFrame()
+display_component(
+    pca_fitted_model=pca_no_comps_train_model,
+    num_of_components=19,
+    features_list=X_train.columns,
+    component_number=2,
+    n_weights_to_display=15)
 
-    # for each of our new, transformed data points
-    # append the component values to the dataframe
-    for data in pca_components:
-        # get component values for each data point
-        components=data.label['projection'].float32_tensor.values
-        counties_transformed=counties_transformed.append([list(components)])
+# TODO check how to create dimensionality-reduced data - what format should the
+# pca components be
+create_transformed_df
 
-    # index by county, just like counties_scaled
-    df.index=scaled_train_df.index
-
-    # keep only the top n components
-    start_idx = num_of_components - n_top_components
-    df = df.iloc[:,start_idx:]
-    
-    # reverse columns, component order     
-    return counties_transformed.iloc[:, ::-1]
-    
-
-
-
-
-
+# TODO try dimnetionality_reduction_knn.py function for pca dn knn
 
 
 
