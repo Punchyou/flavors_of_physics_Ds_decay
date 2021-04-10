@@ -125,7 +125,7 @@ def create_transformed_df(pca_components, scaled_train_df, num_of_components, n_
     df = df.iloc[:, start_idx:]
 
     # reverse columns, component order
-    return df.iloc[:, ::-1]i
+    return df.iloc[:, ::-1]
 
 
 
