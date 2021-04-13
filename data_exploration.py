@@ -3,12 +3,17 @@ from utils import subplot_correlation_matrix, plot_heatmap, display_component, c
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 from sklearn import preprocessing
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
+from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score, cohen_kappa_score, matthews_corrcoef,
+plot_precision_recall_curve
+from sklearn.pipeline import make_pipeline
 
 
 # exploration
@@ -142,7 +147,64 @@ plt.ylabel('Accuracy')
 print("Maximum accuracy:-", max(acc), "at K =", acc.index(max(acc)))
 
 
+# second classifier
+sgd_clf = SGDClassifier(random_state=42)
+sgd_clf.fit(X_train, y_train)
+pred = sgd_clf.predict(X_test)
 
+# Measure performance with predictions of CV and confusion matrix
+# might need to scale the results - easier with a pipeline, you get the
+# predictions right away
+clf = make_pipeline(StandardScaler(), SGDClassifier(random_state=42, max_iter=1000, tol=1e-3))
+# return PREDICTIONS after CV - can only be used for prediction from training
+# data
+y_train_pred_cv = cross_val_predict(clf, X_train, y_train)
+# true neg, false pos, false neg, true pos
+tn, fp, fn, tp = confusion_matrix(y_train, y_train_pred_cv).ravel()
+
+# prediction from test
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+# viz confusion matrix
+sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
+plt.show()
+
+# true positive rate - how many observations out of all positive observations have we classified as positive
+# we want this to be close to 1
+recall = recall_score(y_test, y_pred)
+
+# positive predictive value - how many observations predicted as positive are in fact positive.
+precision = precision_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+# accuracy - how many observations, both positive and negative, were correctly
+# classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
+accuracy = accuracy_score(y_test, y_pred)
+# false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
+# we want this to be close to 0
+fpr = fp / (fp + tn)
+
+# flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
+# we want this to be close to 0
+fnr = fn / (tp + fn)
+
+# Negative Predictive Value - measures how many predictions out of all negative
+# predictions were correct
+# we want this to be close to 1
+npv = tn / (tn + fn)
+
+# Cohen Kappa tells you how much better is your model over the random
+# classifier that predicts based on class frequencies. We can easily distinguish
+# the worst/best models based on this metric.
+# we want this to be close to 1
+ckp = cohen_kappa_score(y_test, y_pred)
+
+# check their correlation
+matthews_corr = matthiews_corrcoef(y_test, y_pred)
+
+# plotting prec/recall curve
+plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
 
 """
 How to choose the best n components for pca:
@@ -154,11 +216,14 @@ This curve quantifies how much of the total, 64-dimensional variance is containe
 
 * From the pca graph, looks like that the data are described from 3 variables.
 
+Why use sklearn pipeline for SGDClassifier?
+Often in ML tasks you need to perform sequence of different transformations (find set of features, generate new features, select only some good features) of raw dataset before applying final estimator. Pipeline gives you a single interface for all 3 steps of transformation and resulting estimator. It encapsulates transformers and predictors inside.
+
 Sources:
 https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
 https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
 Data Science from Scratch
 Machine learning with python
 Feature Egnineering
-
+https://github.com/Punchyou/blog-binary-classification-metrics
 """
