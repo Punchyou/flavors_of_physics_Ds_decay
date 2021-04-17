@@ -205,6 +205,11 @@ matthews_corr = matthiews_corrcoef(y_test, y_pred)
 
 # plotting prec/recall curve
 plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
+plt.show()
+
+# check how many times the clf did the job correctly
+from sklearn.model_selection import cross_val_score
+cross_val_score(clf, X_train, y_train)
 
 """
 How to choose the best n components for pca:
@@ -226,4 +231,7 @@ Data Science from Scratch
 Machine learning with python
 Feature Egnineering
 https://github.com/Punchyou/blog-binary-classification-metrics
+https://www.youtube.com/watch?v=aXpsCyXXMJE
+
+
 """
