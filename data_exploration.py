@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import subplot_correlation_matrix, plot_heatmap, display_component, create_transformed_df
+from utils import subplot_correlation_matrix, plot_heatmap, display_component, create_transformed_df, plot_learning_curve
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
@@ -11,10 +11,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score, cohen_kappa_score, matthews_corrcoef,
-plot_precision_recall_curve
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score, cohen_kappa_score, matthews_corrcoef, plot_precision_recall_curve
 from sklearn.pipeline import make_pipeline
-
+import sklearn as sk
+from sklearn import svm
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 
 # exploration
 # load data
@@ -31,6 +33,8 @@ X = train_df.drop('signal', axis=1)
 
 # check couts of values
 train_df['signal'].value_counts()
+sns.countplot(x = 'signal', data=train_df)
+plt.show()
 
 # check correlations
 train_df.corr()
@@ -52,7 +56,7 @@ plot_heatmap(df=train_df, columns=train_df.columns, figsize=(10, 8), annot_fonts
 plt.show()
 
 # split in X and y
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 # scaling is required for pca
 scaler = MinMaxScaler()
@@ -120,7 +124,8 @@ for i in range(from_, to):
     knn = KNeighborsClassifier(n_neighbors=i)
     knn.fit(X_train, y_train)
     pred_i = knn.predict(X_test)
-    error_rate.loc[] = error_rate.append(np.mean(pred_i != y_test))
+    error_rate = error_rate.append(np.mean(pd.DaataFrame(pred_i) !=
+                                           y_test.reset_index(drop=True)))
 
 plt.figure(figsize=(10, 6))
 plt.plot(range(from_, to), error_rate.values, color='blue', linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
@@ -208,8 +213,33 @@ plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
 plt.show()
 
 # check how many times the clf did the job correctly
-from sklearn.model_selection import cross_val_score
 cross_val_score(clf, X_train, y_train)
+
+# support vector machines
+svm = svm.LinearSVC()
+svm.fit(X_train_scaled, y_train)
+svm_prediction = svm.predict(X_test_scaled)
+svm_accuracy = accuracy_score(y_test, svm_prediction)
+# use cross validation as results acc is 1
+cross_val_score()
+
+# Random forest - reduce overfitting
+rfc = RandomForestClassifier(random_state      = 42,
+                             n_estimators      = 6,
+                             max_depth         = 3,
+                             min_samples_split = 3,
+                             min_samples_leaf  = 2)
+
+rfc.fit(X_train, y_train)
+rfc_prediction = rfc.predict(X_test)
+accuracy_score(y_tes)
+
+# check if the model suffers from bias as accuracy is very high
+# plot the learning curve
+plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
+plt.show()
+
+
 
 """
 How to choose the best n components for pca:
@@ -232,6 +262,6 @@ Machine learning with python
 Feature Egnineering
 https://github.com/Punchyou/blog-binary-classification-metrics
 https://www.youtube.com/watch?v=aXpsCyXXMJE
-
+https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
 
 """
