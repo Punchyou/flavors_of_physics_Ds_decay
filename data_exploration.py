@@ -17,6 +17,8 @@ import sklearn as sk
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.model_selection import cross_val_score
 
 # exploration
 # load data
@@ -118,14 +120,13 @@ create_transformed_df
 
 # find optimal value based on error
 
-from_, to = 40, 80
+from_, to = 1, 40
 error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
 for i in range(from_, to):
     knn = KNeighborsClassifier(n_neighbors=i)
-    knn.fit(X_train, y_train)
+    knn.fit(X_train_scaled, y_train)
     pred_i = knn.predict(X_test)
-    error_rate = error_rate.append(np.mean(pd.DaataFrame(pred_i) !=
-                                           y_test.reset_index(drop=True)))
+    error_rate.loc[error_rate.index==i] = np.mean(pred_i != y_test)
 
 plt.figure(figsize=(10, 6))
 plt.plot(range(from_, to), error_rate.values, color='blue', linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
@@ -139,18 +140,26 @@ plt.show()
 # find optimal k values based on accuracy
 acc = []
 # Will take some time
-for i in range(1,40):
-    neigh = KNeighborsClassifier(n_neighbors = i).fit(X_train,y_train)
+from_, to = 1, 80
+for i in range(from_, to):
+    neigh = KNeighborsClassifier(n_neighbors=i).fit(X_train,y_train)
     yhat = neigh.predict(X_test)
     acc.append(metrics.accuracy_score(y_test, yhat))
 
-plt.figure(figsize=(10,6))
-plt.plot(range(40,100),acc,color = 'blue',linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
+# TODO amke this into a func - is the same for error the above 
+plt.figure(figsize=(10, 6))
+plt.plot(range(from_,to),acc,color = 'blue',linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
 plt.title('accuracy vs. K Value')
 plt.xlabel('K')
 plt.ylabel('Accuracy')
 print("Maximum accuracy:-", max(acc), "at K =", acc.index(max(acc)))
+plt.show()
 
+k = 72
+k = 2
+neigh = KNeighborsClassifier(n_neighbors=k).fit(X_train_scaled, y_train)
+knn_prediction = neigh.predict(X_test)
+accuracy_score(y_test, knn_prediction)
 
 # second classifier
 sgd_clf = SGDClassifier(random_state=42)
@@ -239,7 +248,8 @@ accuracy_score(y_tes)
 plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
 plt.show()
 
-
+# XGBoost Classifier
+cross_val_score(XGBClassifier(), X, y)
 
 """
 How to choose the best n components for pca:
