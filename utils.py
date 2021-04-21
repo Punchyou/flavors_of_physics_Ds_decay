@@ -245,3 +245,26 @@ def plot_learning_curve(estimator, title, X, y, axes=None, ylim=None, cv=None,
     axes[2].set_title("Performance of the model")
 
     return plt
+
+def scatterplot_range_knn_score(scores:  list, from_: int=0, to=10, figsize:
+                                   tuple= (10, 6)):
+    """
+    Plot accuracy or error score of a knn classifier.
+    """
+    plt.figure(figsize=figsize)
+    plt.plot(
+        range(from_, to),
+        scores,
+        color='blue',
+        linestyle='dashed',
+        marker='o',
+        markerfacecolor='red',
+        markersize=10
+    )
+    plt.title('Accuracy vs. K Value')
+    plt.xlabel('K')
+    plt.ylabel('Accuracy')
+    print("Maximum accuracy:-", max(acc), "at K =", acc.index(max(acc)))
+    return plt
+
+
