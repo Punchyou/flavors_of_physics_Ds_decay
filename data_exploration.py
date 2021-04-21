@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import subplot_correlation_matrix, plot_heatmap, display_component, create_transformed_df, plot_learning_curve
+from utils import subplot_correlation_matrix, plot_heatmap, display_component, create_transformed_df, plot_learning_curve, scatterplot_range_knn_accuracy
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
@@ -111,15 +111,8 @@ display_component(
     component_number=2,
     n_weights_to_display=15)
 
-# TODO check how to create dimensionality-reduced data - what format should the
-# pca components be
-create_transformed_df
-
-# TODO try dimnetionality_reduction_knn.py function for pca dn knn
-
 
 # find optimal value based on error
-
 from_, to = 1, 40
 error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
 for i in range(from_, to):
@@ -128,39 +121,25 @@ for i in range(from_, to):
     pred_i = knn.predict(X_test)
     error_rate.loc[error_rate.index==i] = np.mean(pred_i != y_test)
 
-plt.figure(figsize=(10, 6))
-plt.plot(range(from_, to), error_rate.values, color='blue', linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
-plt.title('Error Rate vs. K Value')
-plt.xlabel('K')
-plt.ylabel('Error Rate')
-print("Minimum error:-", min(error_rate), "at K =",
-      error_rate[error_rate['rate']==min(error_rate)].index)
-plt.show()
 
 # find optimal k values based on accuracy
 acc = []
 # Will take some time
-from_, to = 1, 80
+from_, to = 1, 10
 for i in range(from_, to):
     neigh = KNeighborsClassifier(n_neighbors=i).fit(X_train,y_train)
     yhat = neigh.predict(X_test)
     acc.append(metrics.accuracy_score(y_test, yhat))
-
-# TODO amke this into a func - is the same for error the above 
-plt.figure(figsize=(10, 6))
-plt.plot(range(from_,to),acc,color = 'blue',linestyle='dashed', marker='o', markerfacecolor='red', markersize=10)
-plt.title('accuracy vs. K Value')
-plt.xlabel('K')
-plt.ylabel('Accuracy')
-print("Maximum accuracy:-", max(acc), "at K =", acc.index(max(acc)))
-plt.show()
 
 k = 72
 k = 2
 neigh = KNeighborsClassifier(n_neighbors=k).fit(X_train_scaled, y_train)
 knn_prediction = neigh.predict(X_test)
 accuracy_score(y_test, knn_prediction)
+tn, fp, fn, tp = confusion_matrix(y_test, knn_prediction).ravel()
 
+performance_metrics = pd.DataFrame(
+columns=['Accuracy', ]) 
 # second classifier
 sgd_clf = SGDClassifier(random_state=42)
 sgd_clf.fit(X_train, y_train)
