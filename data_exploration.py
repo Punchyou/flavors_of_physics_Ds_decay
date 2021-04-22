@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import subplot_correlation_matrix, plot_heatmap, display_component, create_transformed_df, plot_learning_curve, scatterplot_range_knn_accuracy
+import utils
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
@@ -51,10 +51,10 @@ train_df.dtypes
 # describe
 train_df.describe()
 
-subplot_correlation_matrix(train_df, (30, 30))
+utils.subplot_correlation_matrix(train_df, (30, 30))
 plt.show()
 
-plot_heatmap(df=train_df, columns=train_df.columns, figsize=(10, 8), annot_fontsize=6)
+utils.plot_heatmap(df=train_df, columns=train_df.columns, figsize=(10, 8), annot_fontsize=6)
 plt.show()
 
 # split in X and y
@@ -104,7 +104,7 @@ components_95per_var[:9].sum() # 0.82
 
 
 # now create the reansformed training set
-display_component(
+utils.display_component(
     pca_fitted_model=pca_no_comps_train_model,
     num_of_components=19,
     features_list=X_train.columns,
@@ -112,34 +112,101 @@ display_component(
     n_weights_to_display=15)
 
 
-# find optimal value based on error
-from_, to = 1, 40
-error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
-for i in range(from_, to):
-    knn = KNeighborsClassifier(n_neighbors=i)
-    knn.fit(X_train_scaled, y_train)
-    pred_i = knn.predict(X_test)
-    error_rate.loc[error_rate.index==i] = np.mean(pred_i != y_test)
+def false_negative_rate(tp: float, fn: float):
+    # flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
+    # we want this to be close to 0
+    return fn / (tp + fn)
 
 
-# find optimal k values based on accuracy
-acc = []
-# Will take some time
-from_, to = 1, 10
-for i in range(from_, to):
-    neigh = KNeighborsClassifier(n_neighbors=i).fit(X_train,y_train)
-    yhat = neigh.predict(X_test)
-    acc.append(metrics.accuracy_score(y_test, yhat))
+def negative_predictive_value(tn: float, fn: float):
+    # Negative Predictive Value - measures how many predictions out of all negative
+    # predictions were correct
+    # we want this to be close to 1
+    return tn / (tn + fn)
 
-k = 72
-k = 2
-neigh = KNeighborsClassifier(n_neighbors=k).fit(X_train_scaled, y_train)
-knn_prediction = neigh.predict(X_test)
-accuracy_score(y_test, knn_prediction)
-tn, fp, fn, tp = confusion_matrix(y_test, knn_prediction).ravel()
 
-performance_metrics = pd.DataFrame(
-columns=['Accuracy', ]) 
+def false_positive_rate(fp: float, tn: float):
+    # false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
+    # we want this to be close to 0
+    return fp / (fp + tn)
+
+
+def gather_performance_metrics(y_true: list, y_pred: list):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+
+    # false negative rate
+    fnr = false_negative_rate(tp, fn)
+    npv = negative_predictive_value(tn, fn)
+    fpr = false_positive_rate(fp, tn)
+    # true positive rate - how many observations out of all positive
+    # observations have we classified as positive
+    # we want this to be close to 1
+    recall = recall_score(y_true, y_pred)
+
+    # positive predictive value - how many observations predicted as positive are in fact positive.
+    precision = precision_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+
+    # accuracy - how many observations, both positive and negative, were correctly
+    # classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
+    accuracy = accuracy_score(y_test, y_pred)
+    return pd.DataFrame(
+        data=[accuracy, fnr, npv, fpr, recall, precision, f1],
+        index=[
+            'Accuracy',
+            'FNR',
+            'NPV',
+            'FPR',
+            'Recall',
+            'Precision',
+            'F1'
+        ]
+    )
+
+# plotting prec/recall curve
+plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
+plt.show()
+
+
+def main():
+   # load data
+    train_df = pd.read_csv('data/training.csv', index_col='id')
+    y = train_df['signal']
+    X = train_df.drop('signal', axis=1)
+
+   # split in X and y
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+    # scaling is required for pca
+    scaler = MinMaxScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.fit_transform(X_test)
+
+   # find optimal value based on error
+    from_, to = 1, 40
+    error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
+    for i in range(from_, to):
+        knn = KNeighborsClassifier(n_neighbors=i)
+        knn.fit(X_train_scaled, y_train)
+        pred_i = knn.predict(X_test)
+        error_rate.loc[error_rate.index==i] = np.mean(pred_i != y_test)
+
+    # find optimal k values based on accuracy
+    acc = []
+    # Will take some time
+    from_, to = 1, 10
+    for i in range(from_, to):
+        neigh = KNeighborsClassifier(n_neighbors=i).fit(X_train,y_train)
+        yhat = neigh.predict(X_test)
+        acc.append(metrics.accuracy_score(y_test, yhat))
+
+
+    # apply knn with the oprimal k value
+    k = 72
+    knn_clf = KNeighborsClassifier(n_neighbors=k)
+    knn_clf.fit(X_train_scaled, y_train)
+    knn_prediction = knn_clf.predict(X_test_scaled)
+
 # second classifier
 sgd_clf = SGDClassifier(random_state=42)
 sgd_clf.fit(X_train, y_train)
@@ -161,43 +228,6 @@ y_pred = clf.predict(X_test)
 tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
 # viz confusion matrix
 sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
-plt.show()
-
-# true positive rate - how many observations out of all positive observations have we classified as positive
-# we want this to be close to 1
-recall = recall_score(y_test, y_pred)
-
-# positive predictive value - how many observations predicted as positive are in fact positive.
-precision = precision_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
-
-# accuracy - how many observations, both positive and negative, were correctly
-# classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
-accuracy = accuracy_score(y_test, y_pred)
-# false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
-# we want this to be close to 0
-fpr = fp / (fp + tn)
-
-# flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
-# we want this to be close to 0
-fnr = fn / (tp + fn)
-
-# Negative Predictive Value - measures how many predictions out of all negative
-# predictions were correct
-# we want this to be close to 1
-npv = tn / (tn + fn)
-
-# Cohen Kappa tells you how much better is your model over the random
-# classifier that predicts based on class frequencies. We can easily distinguish
-# the worst/best models based on this metric.
-# we want this to be close to 1
-ckp = cohen_kappa_score(y_test, y_pred)
-
-# check their correlation
-matthews_corr = matthiews_corrcoef(y_test, y_pred)
-
-# plotting prec/recall curve
-plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
 plt.show()
 
 # check how many times the clf did the job correctly
