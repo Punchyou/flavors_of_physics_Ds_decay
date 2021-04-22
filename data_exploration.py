@@ -19,119 +19,29 @@ from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score
+import mypy
 
-# exploration
-# load data
-train_df = pd.read_csv('data/training.csv', index_col='id')
-y = train_df['signal']
-X = train_df.drop('signal', axis=1)
-
-# test_df = pd.read_csv('data/test.csv', index_col='id')
-# 
-# # kepp only common columns in both train and test sets
-# common_cols = np.intersect1d(train_df.columns, test_df.columns)
-# train_df = train_df[common_cols]
-# test_df = test_df[common_cols]
-
-# check couts of values
-train_df['signal'].value_counts()
-sns.countplot(x = 'signal', data=train_df)
-plt.show()
-
-# check correlations
-train_df.corr()
-train_df.columns[(train_df.corr()['LifeTime'] > 0.5).values]
-
-# nan values
-len(train_df) - len(train_df.dropna())
-
-# check data types of columns
-train_df.dtypes
-
-# describe
-train_df.describe()
-
-utils.subplot_correlation_matrix(train_df, (30, 30))
-plt.show()
-
-utils.plot_heatmap(df=train_df, columns=train_df.columns, figsize=(10, 8), annot_fontsize=6)
-plt.show()
-
-# split in X and y
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-# scaling is required for pca
-scaler = MinMaxScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.fit_transform(X_test)
-
-# Dimentionality Reduction
-# calculate parameters
-pca = PCA().fit(X_train)
-plt.plot(np.cumsum(pca.explained_variance_ratio_))
-plt.xlabel('number of components')
-plt.ylabel('cumulative explained variance')
-plt.show()
-# looks like that the data are described by 3 variables
-
-# apply pca transform
-pca_train = PCA(n_components=3).fit_transform(X_train_scaled)
-pca_test = PCA(n_components=3).fit_transform(X_test_scaled)
-
-# 3d scatterplot for components
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter([x[0] for x in pca_train], [y[1] for y in pca_train], [z[2] for z in
-                                                            pca_train])
-plt.show()
-
-# TODO based on the plot above, go for DBSCAN
-# Second way of choosing the number of components
-# define the percentage of the total variance that the data cover in the
-# dataset
-pca_no_comps_train_model = PCA(n_components=0.95) # 95 percent of variance
-pca_no_comps_train_comps = pca_no_comps_train_model.fit_transform(X_train_scaled)
-
-# check the proportion of the data's variance that lies along the axis for each
-# principal component
-components_95per_var = pca_no_comps_train_model.explained_variance_ratio_
-# check how many they are
-len(components_95per_var) # 19 coponents
-
-# check how many complenents describe how much variance for 9 components
-components_95per_var[:9].sum() # 0.82
-# TODO do the above for test set too
-
-
-# now create the reansformed training set
-utils.display_component(
-    pca_fitted_model=pca_no_comps_train_model,
-    num_of_components=19,
-    features_list=X_train.columns,
-    component_number=2,
-    n_weights_to_display=15)
-
-
-def false_negative_rate(tp: float, fn: float):
+# performance metrics funcs
+def false_negative_rate(tp: float, fn: float) -> float:
     # flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
     # we want this to be close to 0
     return fn / (tp + fn)
 
 
-def negative_predictive_value(tn: float, fn: float):
+def negative_predictive_value(tn: float, fn: float) -> float:
     # Negative Predictive Value - measures how many predictions out of all negative
     # predictions were correct
     # we want this to be close to 1
     return tn / (tn + fn)
 
 
-def false_positive_rate(fp: float, tn: float):
+def false_positive_rate(fp: float, tn: float) -> float:
     # false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
     # we want this to be close to 0
     return fp / (fp + tn)
 
 
-def gather_performance_metrics(y_true: list, y_pred: list):
+def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd.DataFrame:
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
     # false negative rate
@@ -160,29 +70,30 @@ def gather_performance_metrics(y_true: list, y_pred: list):
             'Recall',
             'Precision',
             'F1'
-        ]
+        ],
+        columns=[model_col]
     )
-
-# plotting prec/recall curve
-plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
-plt.show()
 
 
 def main():
-   # load data
+    # TODO add pipeline for models that take in scaled data
+    # TODO add a func to fit and return predictions
+    # TODO make clf var names consistent
+    # load data
     train_df = pd.read_csv('data/training.csv', index_col='id')
     y = train_df['signal']
     X = train_df.drop('signal', axis=1)
 
-   # split in X and y
+    # split in X and y
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
-    # scaling is required for pca
+    # scaling is required for some of the following models
     scaler = MinMaxScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.fit_transform(X_test)
 
-   # find optimal value based on error
+    # model 1 - KNN
+    # find optimal value based on error
     from_, to = 1, 40
     error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
     for i in range(from_, to):
@@ -200,65 +111,62 @@ def main():
         yhat = neigh.predict(X_test)
         acc.append(metrics.accuracy_score(y_test, yhat))
 
-
     # apply knn with the oprimal k value
     k = 72
     knn_clf = KNeighborsClassifier(n_neighbors=k)
     knn_clf.fit(X_train_scaled, y_train)
     knn_prediction = knn_clf.predict(X_test_scaled)
+    # plotting prec/recall curve
+    plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
+    plt.show()
 
-# second classifier
-sgd_clf = SGDClassifier(random_state=42)
-sgd_clf.fit(X_train, y_train)
-pred = sgd_clf.predict(X_test)
+    # model 2 - SDG - linear SVM
+    sgd_clf = SGDClassifier(random_state=42)
+    sgd_clf.fit(X_train, y_train)
+    sgd_prediction = sgd_clf.predict(X_test)
 
-# Measure performance with predictions of CV and confusion matrix
-# might need to scale the results - easier with a pipeline, you get the
-# predictions right away
-clf = make_pipeline(StandardScaler(), SGDClassifier(random_state=42, max_iter=1000, tol=1e-3))
-# return PREDICTIONS after CV - can only be used for prediction from training
-# data
-y_train_pred_cv = cross_val_predict(clf, X_train, y_train)
-# true neg, false pos, false neg, true pos
-tn, fp, fn, tp = confusion_matrix(y_train, y_train_pred_cv).ravel()
+    # Measure performance with predictions of CV and confusion matrix
+    # might need to scale the results - easier with a pipeline, you get the
+    # predictions right away
+    sgd_pipeline = make_pipeline(StandardScaler(), SGDClassifier(random_state=42, max_iter=1000, tol=1e-3))
+    # return PREDICTIONS after CV - can only be used for prediction from training
+    # data
+    sgd_prediction_train = cross_val_predict(sgd_pipeline, X_train, y_train)
 
-# prediction from test
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
-tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
-# viz confusion matrix
-sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
-plt.show()
+    # check how many times the clf did the job correctly
+    cross_val_score(sgd_pipeline, X_train, y_train)
 
-# check how many times the clf did the job correctly
-cross_val_score(clf, X_train, y_train)
+    # model 3 - support vector machines
+    svm = svm.LinearSVC()
+    svm.fit(X_train_scaled, y_train)
+    svm_prediction = svm.predict(X_test_scaled)
+    svm_accuracy = accuracy_score(y_test, svm_prediction)
+    # use cross validation as results acc is 1
+    cross_val_score()
 
-# support vector machines
-svm = svm.LinearSVC()
-svm.fit(X_train_scaled, y_train)
-svm_prediction = svm.predict(X_test_scaled)
-svm_accuracy = accuracy_score(y_test, svm_prediction)
-# use cross validation as results acc is 1
-cross_val_score()
+    # model 4 - Random forest - reduce overfitting
+    rfc = RandomForestClassifier(random_state      = 42,
+                                 n_estimators      = 6,
+                                 max_depth         = 3,
+                                 min_samples_split = 3,
+                                 min_samples_leaf  = 2)
 
-# Random forest - reduce overfitting
-rfc = RandomForestClassifier(random_state      = 42,
-                             n_estimators      = 6,
-                             max_depth         = 3,
-                             min_samples_split = 3,
-                             min_samples_leaf  = 2)
+    rfc.fit(X_train, y_train)
+    rfc_prediction = rfc.predict(X_test)
+    accuracy_score(y_tes)
 
-rfc.fit(X_train, y_train)
-rfc_prediction = rfc.predict(X_test)
-accuracy_score(y_tes)
+    # check if the model suffers from bias as accuracy is very high
+    # plot the learning curve
+    plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
+    plt.show()
 
-# check if the model suffers from bias as accuracy is very high
-# plot the learning curve
-plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
-plt.show()
+    # model 5 - XGBoost Classifier
+    cross_val_score(XGBClassifier(), X, y)
 
-# XGBoost Classifier
-cross_val_score(XGBClassifier(), X, y)
+    # TODO add viz where needed
+    # viz confusion matrix
+    sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
+    plt.show()
 
 """
 How to choose the best n components for pca:
