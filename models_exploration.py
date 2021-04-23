@@ -41,6 +41,10 @@ def false_positive_rate(fp: float, tn: float) -> float:
     return fp / (fp + tn)
 
 
+def true_negative_rate(tn: float, fp: float) -> float:
+    return tn / (tn + fp)
+
+
 def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd.DataFrame:
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
@@ -48,7 +52,8 @@ def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd
     fnr = false_negative_rate(tp, fn)
     npv = negative_predictive_value(tn, fn)
     fpr = false_positive_rate(fp, tn)
-    # true positive rate - how many observations out of all positive
+    tnr = true_negative_rate(tn, fp)
+    # true positive rate or sensitivity - how many observations out of all positive
     # observations have we classified as positive
     # we want this to be close to 1
     recall = recall_score(y_true, y_pred)
@@ -59,14 +64,15 @@ def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd
 
     # accuracy - how many observations, both positive and negative, were correctly
     # classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
-    accuracy = accuracy_score(y_test, y_pred)
+    accuracy = accuracy_score(y_true, y_pred)
     return pd.DataFrame(
-        data=[accuracy, fnr, npv, fpr, recall, precision, f1],
+        data=[accuracy, fnr, npv, fpr, tnr, recall, precision, f1],
         index=[
             'Accuracy',
             'FNR',
             'NPV',
             'FPR',
+            'TPR',
             'Recall',
             'Precision',
             'F1'
@@ -79,11 +85,15 @@ def main():
     # TODO add pipeline for models that take in scaled data
     # TODO add a func to fit and return predictions
     # TODO make clf var names consistent
+    # TODO plot learning curve for all models
     # load data
-    train_df = pd.read_csv('data/training.csv', index_col='id')
+    # train_df = pd.read_csv('data/training.csv', index_col='id')
+    train_df = pd.read_csv('check_agreement.csv', index_col='id')
     y = train_df['signal']
-    X = train_df.drop('signal', axis=1)
+    X = train_df.drop(['weight', 'SPDhits', 'signal'], axis=1)
+    agr_weigths = ['weight']
 
+    check_corr = pd.read_csv('check_correlation.csv', index_col='id')
     # split in X and y
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
@@ -93,14 +103,14 @@ def main():
     X_test_scaled = scaler.fit_transform(X_test)
 
     # model 1 - KNN
-    # find optimal value based on error
+    # k parameters tuning
     from_, to = 1, 40
     error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
     for i in range(from_, to):
         knn = KNeighborsClassifier(n_neighbors=i)
         knn.fit(X_train_scaled, y_train)
         pred_i = knn.predict(X_test)
-        error_rate.loc[error_rate.index==i] = np.mean(pred_i != y_test)
+        error_rate.loc[error_rate.index == i] = np.mean(pred_i != y_test)
 
     # find optimal k values based on accuracy
     acc = []
@@ -116,6 +126,7 @@ def main():
     knn_clf = KNeighborsClassifier(n_neighbors=k)
     knn_clf.fit(X_train_scaled, y_train)
     knn_prediction = knn_clf.predict(X_test_scaled)
+    metrics = gather_performance_metrics()
     # plotting prec/recall curve
     plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
     plt.show()
@@ -125,8 +136,6 @@ def main():
     sgd_clf.fit(X_train, y_train)
     sgd_prediction = sgd_clf.predict(X_test)
 
-    # Measure performance with predictions of CV and confusion matrix
-    # might need to scale the results - easier with a pipeline, you get the
     # predictions right away
     sgd_pipeline = make_pipeline(StandardScaler(), SGDClassifier(random_state=42, max_iter=1000, tol=1e-3))
     # return PREDICTIONS after CV - can only be used for prediction from training
@@ -137,36 +146,28 @@ def main():
     cross_val_score(sgd_pipeline, X_train, y_train)
 
     # model 3 - support vector machines
-    svm = svm.LinearSVC()
-    svm.fit(X_train_scaled, y_train)
-    svm_prediction = svm.predict(X_test_scaled)
-    svm_accuracy = accuracy_score(y_test, svm_prediction)
-    # use cross validation as results acc is 1
-    cross_val_score()
+    svm_clf = svm.LinearSVC()
+    svm_clf.fit(X_train_scaled, y_train)
+    svm_prediction = svm_clf.predict(X_test_scaled)
 
-    # model 4 - Random forest - reduce overfitting
-    rfc = RandomForestClassifier(random_state      = 42,
-                                 n_estimators      = 6,
-                                 max_depth         = 3,
-                                 min_samples_split = 3,
-                                 min_samples_leaf  = 2)
+    # model 4 - XGBoost Classifier
+    xgb_clf = XGBClassifier()
 
-    rfc.fit(X_train, y_train)
-    rfc_prediction = rfc.predict(X_test)
-    accuracy_score(y_tes)
+    # TODO add viz where needed
+    sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
+    plt.show()
 
     # check if the model suffers from bias as accuracy is very high
     # plot the learning curve
     plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
     plt.show()
 
-    # model 5 - XGBoost Classifier
-    cross_val_score(XGBClassifier(), X, y)
+    evaluation.compute_ks(
+    agreement_probs[check_agreement['signal'].values == 0],
+    agreement_probs[check_agreement['signal'].values == 1],
+    check_agreement[check_agreement['signal'] == 0]['weight'].values,
+    check_agreement[check_agreement['signal'] == 1]['weight'].values)
 
-    # TODO add viz where needed
-    # viz confusion matrix
-    sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
-    plt.show()
 
 """
 How to choose the best n components for pca:
@@ -184,11 +185,13 @@ Often in ML tasks you need to perform sequence of different transformations (fin
 Sources:
 https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
 https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
+Data Exploration - Model selection:
 Data Science from Scratch
 Machine learning with python
 Feature Egnineering
 https://github.com/Punchyou/blog-binary-classification-metrics
 https://www.youtube.com/watch?v=aXpsCyXXMJE
-https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
-
+Model Evaluation: https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
+Hyperparameters Tuning: https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
+Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
 """
