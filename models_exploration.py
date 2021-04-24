@@ -13,13 +13,15 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score, cohen_kappa_score, matthews_corrcoef, plot_precision_recall_curve
 from sklearn.pipeline import make_pipeline
-import sklearn as sk
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score
 import mypy
+from scipy.stats import kstest
+from imblearn.under_sampling import RandomUnderSampler
+
 
 # performance metrics funcs
 def false_negative_rate(tp: float, fn: float) -> float:
@@ -45,6 +47,10 @@ def true_negative_rate(tn: float, fp: float) -> float:
     return tn / (tn + fp)
 
 
+def error_score(y_true: list, y_pred: list):
+    return np.mean(y_pred != y_true)
+
+
 def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd.DataFrame:
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
@@ -65,10 +71,14 @@ def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd
     # accuracy - how many observations, both positive and negative, were correctly
     # classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
     accuracy = accuracy_score(y_true, y_pred)
+    error = error_score(y_true, y_pred)
+    ks = kstest(y_pred, y_true)[0]
     return pd.DataFrame(
-        data=[accuracy, fnr, npv, fpr, tnr, recall, precision, f1],
-        index=[
+        data=[[accuracy, error, ks, fnr, npv, fpr, tnr, recall, precision, f1]],
+        columns=[
             'Accuracy',
+            'Error',
+            'KS',
             'FNR',
             'NPV',
             'FPR',
@@ -77,7 +87,7 @@ def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd
             'Precision',
             'F1'
         ],
-        columns=[model_col]
+        index=[model_col]
     )
 
 
@@ -85,17 +95,21 @@ def main():
     # TODO add pipeline for models that take in scaled data
     # TODO add a func to fit and return predictions
     # TODO make clf var names consistent
-    # TODO plot learning curve for all models
     # load data
     # train_df = pd.read_csv('data/training.csv', index_col='id')
     train_df = pd.read_csv('check_agreement.csv', index_col='id')
     y = train_df['signal']
-    X = train_df.drop(['weight', 'SPDhits', 'signal'], axis=1)
-    agr_weigths = ['weight']
+    # according to the dataset description, weights are used to
+    # determine if a decay is signal or background event
+    X = train_df.drop(['weight', 'signal'], axis=1)
 
-    check_corr = pd.read_csv('check_correlation.csv', index_col='id')
+    undersampler = RandomUnderSampler(random_state=42)
+    X_resampled, y_resampled = undersampler.fit_resample(X, y)
+
     # split in X and y
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(X_resampled,
+                                                        y_resampled,
+                                                        test_size=0.2)
 
     # scaling is required for some of the following models
     scaler = MinMaxScaler()
@@ -103,30 +117,29 @@ def main():
     X_test_scaled = scaler.fit_transform(X_test)
 
     # model 1 - KNN
-    # k parameters tuning
-    from_, to = 1, 40
-    error_rate = pd.DataFrame(index=range(from_, to), columns=['rate'])
+    # parameter tuning
+    from_ = 1
+    to = 60
     for i in range(from_, to):
-        knn = KNeighborsClassifier(n_neighbors=i)
-        knn.fit(X_train_scaled, y_train)
-        pred_i = knn.predict(X_test)
-        error_rate.loc[error_rate.index == i] = np.mean(pred_i != y_test)
+        model_col = f'k={i}'
+        knn_clf = KNeighborsClassifier(n_neighbors=i)
+        knn_clf.fit(X_train_scaled, y_train)
+        knn_prediction = knn_clf.predict(X_test)
+        # need to transfotm returned df into a pd.Series to match the columns
+        if i != from_:
+            metrics_rate.loc[model_col] = gather_performance_metrics(
+                y_true=y_test,
+                y_pred=knn_prediction,
+                model_col=model_col
+            ).squeeze()
+        else:
+            metrics_rate = gather_performance_metrics(
+                y_true=y_test,
+                y_pred=knn_prediction,
+                model_col=model_col
+            )
 
     # find optimal k values based on accuracy
-    acc = []
-    # Will take some time
-    from_, to = 1, 10
-    for i in range(from_, to):
-        neigh = KNeighborsClassifier(n_neighbors=i).fit(X_train,y_train)
-        yhat = neigh.predict(X_test)
-        acc.append(metrics.accuracy_score(y_test, yhat))
-
-    # apply knn with the oprimal k value
-    k = 72
-    knn_clf = KNeighborsClassifier(n_neighbors=k)
-    knn_clf.fit(X_train_scaled, y_train)
-    knn_prediction = knn_clf.predict(X_test_scaled)
-    metrics = gather_performance_metrics()
     # plotting prec/recall curve
     plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
     plt.show()
@@ -162,14 +175,14 @@ def main():
     plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
     plt.show()
 
-    evaluation.compute_ks(
-    agreement_probs[check_agreement['signal'].values == 0],
-    agreement_probs[check_agreement['signal'].values == 1],
-    check_agreement[check_agreement['signal'] == 0]['weight'].values,
-    check_agreement[check_agreement['signal'] == 1]['weight'].values)
-
 
 """
+Dataset Issues:
+    * High acciracy due to the dataset
+    * Pickec another dataset, but it was imbalanced
+    * Had to make it balances by resampling the dataset
+
+
 How to choose the best n components for pca:
 * PCA project the data to less dimensions, so we need to scale the data
 beforehand.
@@ -191,7 +204,9 @@ Machine learning with python
 Feature Egnineering
 https://github.com/Punchyou/blog-binary-classification-metrics
 https://www.youtube.com/watch?v=aXpsCyXXMJE
-Model Evaluation: https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
+Models Evaluation:
+    * https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
+    * https://neptune.ai/blog/evaluation-metrics-binary-classification
 Hyperparameters Tuning: https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
 Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
 """
