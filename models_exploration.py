@@ -11,17 +11,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score, cohen_kappa_score, matthews_corrcoef, plot_precision_recall_curve
 from sklearn.pipeline import make_pipeline
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV, cross_val_score
 import mypy
 from scipy.stats import kstest
 from imblearn.under_sampling import RandomUnderSampler
-
+from sklearn.metrics import (
+    confusion_matrix,
+    precision_score,
+    recall_score,
+    f1_score,
+    accuracy_score,
+    cohen_kappa_score,
+    matthews_corrcoef,
+    plot_precision_recall_curve,
+)
 
 # performance metrics funcs
 def false_negative_rate(tp: float, fn: float) -> float:
@@ -51,7 +59,9 @@ def error_score(y_true: list, y_pred: list):
     return np.mean(y_pred != y_true)
 
 
-def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd.DataFrame:
+def gather_performance_metrics(
+    y_true: list, y_pred: list, model_col: str
+) -> pd.DataFrame:
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
     # false negative rate
@@ -76,40 +86,48 @@ def gather_performance_metrics(y_true: list, y_pred: list, model_col: str) -> pd
     return pd.DataFrame(
         data=[[accuracy, error, ks, fnr, npv, fpr, tnr, recall, precision, f1]],
         columns=[
-            'Accuracy',
-            'Error',
-            'KS',
-            'FNR',
-            'NPV',
-            'FPR',
-            'TPR',
-            'Recall',
-            'Precision',
-            'F1'
+            "Accuracy",
+            "Error",
+            "KS",
+            "FNR",
+            "NPV",
+            "FPR",
+            "TNR",
+            "Recall",
+            "Precision",
+            "F1",
         ],
-        index=[model_col]
+        index=[model_col],
     )
+
+
+def range_inc(start, stop, step, inc):
+    i = start
+    while i < stop:
+        yield i
+        i += step
+        step += i*inc
 
 
 def main():
     # TODO add pipeline for models that take in scaled data
     # TODO add a func to fit and return predictions
-    # TODO make clf var names consistent
     # load data
     # train_df = pd.read_csv('data/training.csv', index_col='id')
-    train_df = pd.read_csv('check_agreement.csv', index_col='id')
-    y = train_df['signal']
+    train_df = pd.read_csv("check_agreement.csv", index_col="id")
+    y = train_df["signal"]
     # according to the dataset description, weights are used to
     # determine if a decay is signal or background event
-    X = train_df.drop(['weight', 'signal'], axis=1)
+    X = train_df.drop(["weight", "signal"], axis=1)
 
+    # undersample to create balanced dataset
     undersampler = RandomUnderSampler(random_state=42)
     X_resampled, y_resampled = undersampler.fit_resample(X, y)
 
     # split in X and y
-    X_train, X_test, y_train, y_test = train_test_split(X_resampled,
-                                                        y_resampled,
-                                                        test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_resampled, y_resampled, test_size=0.2
+    )
 
     # scaling is required for some of the following models
     scaler = MinMaxScaler()
@@ -121,42 +139,54 @@ def main():
     from_ = 1
     to = 60
     for i in range(from_, to):
-        model_col = f'k={i}'
+        model_col = f"k={i}"
         knn_clf = KNeighborsClassifier(n_neighbors=i)
         knn_clf.fit(X_train_scaled, y_train)
         knn_prediction = knn_clf.predict(X_test)
         # need to transfotm returned df into a pd.Series to match the columns
         if i != from_:
-            metrics_rate.loc[model_col] = gather_performance_metrics(
-                y_true=y_test,
-                y_pred=knn_prediction,
-                model_col=model_col
+            knn_metrics_rate.loc[model_col] = gather_performance_metrics(
+                y_true=y_test, y_pred=knn_prediction, model_col=model_col
             ).squeeze()
         else:
-            metrics_rate = gather_performance_metrics(
-                y_true=y_test,
-                y_pred=knn_prediction,
-                model_col=model_col
+            knn_metrics_rate = gather_performance_metrics(
+                y_true=y_test, y_pred=knn_prediction, model_col=model_col
             )
+    knn_max_acc = knn_metrics_rate["Accuracy"].max()
+    best_k = knn_metrics_rate[knn_metrics_rate["Accuracy"] == knn_max_acc].index
 
-    # find optimal k values based on accuracy
     # plotting prec/recall curve
-    plot_precision_recall_curve(estimator=clf, X=X_train, y=y_train)
+    plot_precision_recall_curve(estimator=knn_clf, X=X_train, y=y_train)
     plt.show()
 
-    # model 2 - SDG - linear SVM
-    sgd_clf = SGDClassifier(random_state=42)
-    sgd_clf.fit(X_train, y_train)
-    sgd_prediction = sgd_clf.predict(X_test)
+    # model 2 - SDG: Stohastic Gradient Descient (linear SVM)
+    # minimizes the loss function and the regularization term (penalty, for
+    # overfitting)
+    sgd_clf = SGDClassifier()
+    sgd_rs_cv = RandomizedSearchCV(
+        estimator=sgd_clf,
+        param_distributions={
+            "loss": [
+                "log",
+                "hinge",
+                "modified_huber",
+                "squared_hinge",
+                "perceptron",
+                "squared_loss",
+                "huber",
+                "epsilon_insensitive",
+                "squared_epsilon_insensitive",
+            ],
+            "penalty": ["l2", "l1"],
+            "alpha": [round(i, 5) for i in range_inc(0.0001, 100, 0.0001, 1.05)],
+            "early_stopping": [True, False],
+            "random_state": [42]
+        },
+    )
+    sgd_rs_cv.fit(X_train, y_train)
+    sgd_prediction = sgd_rs_cv.predict(X_test)
+    gather_performance_metrics(y_test, sgd_prediction, "sgd")
 
-    # predictions right away
-    sgd_pipeline = make_pipeline(StandardScaler(), SGDClassifier(random_state=42, max_iter=1000, tol=1e-3))
-    # return PREDICTIONS after CV - can only be used for prediction from training
-    # data
-    sgd_prediction_train = cross_val_predict(sgd_pipeline, X_train, y_train)
-
-    # check how many times the clf did the job correctly
-    cross_val_score(sgd_pipeline, X_train, y_train)
 
     # model 3 - support vector machines
     svm_clf = svm.LinearSVC()
@@ -165,14 +195,20 @@ def main():
 
     # model 4 - XGBoost Classifier
     xgb_clf = XGBClassifier()
+    xgb_clf.fit(X_train, y_train)
+    xgb_prediction = xgb_clf.predict(X_test)
 
     # TODO add viz where needed
-    sns.heatmap(confusion_matrix(y_test, y_pred), annot=[['tn', 'fp'],['fn', 'tp']], fmt='s')
+    sns.heatmap(
+        confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
+    )
     plt.show()
 
     # check if the model suffers from bias as accuracy is very high
     # plot the learning curve
-    plot_learning_curve(estimator=rfc, X=X_train, y=y_train, n_jobs=8, title='title')
+    utils.plot_learning_curve(
+        estimator=sgd_clf, X=X_train, y=y_train, n_jobs=8, title="title"
+    )
     plt.show()
 
 

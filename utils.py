@@ -70,8 +70,7 @@ def plot_heatmap(df, columns, vmin=-1, vmax=1, cmap="RdBu", annot=True,
 
 
 # TODO check doscstring + add params
-def display_component(pca_fitted_model, num_of_components, features_list,
-                      component_number, n_weights_to_display=10):
+def display_component(pca_fitted_model, num_of_components, features_list, component_number, n_weights_to_display=10):
     """
     Examine the makeup of each PCA component based on the weightings
     of the original features that are included in the component.
