@@ -3,7 +3,7 @@ import utils
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 from sklearn import preprocessing
@@ -106,12 +106,13 @@ def range_inc(start, stop, step, inc):
     while i < stop:
         yield i
         i += step
-        step += i*inc
+        step += i * inc
 
 
 def main():
     # TODO add pipeline for models that take in scaled data
     # TODO add a func to fit and return predictions
+    # TODO add a baseline model
     # load data
     # train_df = pd.read_csv('data/training.csv', index_col='id')
     train_df = pd.read_csv("check_agreement.csv", index_col="id")
@@ -119,6 +120,11 @@ def main():
     # according to the dataset description, weights are used to
     # determine if a decay is signal or background event
     X = train_df.drop(["weight", "signal"], axis=1)
+
+    # TODO move it to the data exporation file
+    # check distributions
+    X.hist(figsize=(60, 20))
+    plt.show()
 
     # undersample to create balanced dataset
     undersampler = RandomUnderSampler(random_state=42)
@@ -129,11 +135,29 @@ def main():
         X_resampled, y_resampled, test_size=0.2
     )
 
+    # TODO move to the data exploration file
     # scaling is required for some of the following models
-    scaler = MinMaxScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.fit_transform(X_test)
+    minmax_scaler = MinMaxScaler()
+    X_train_minmax_scaled = minmax_scaler.fit_transform(X_train)
+    X_test_minmax_scaled = minmax_scaler.fit_transform(X_test)
 
+    # TODO move to data expl file
+    std_scaler = StandardScaler()
+    X_train_std_scaled = std_scaler.fit_transform(X_train)
+    X_test_std_scaled = std_scaler.fit_transform(X_test)
+
+    # Robust Scaler: doesn't take the median into account and only focuses on the parts where the bulk data is.
+    rob_scaler = RobustScaler()
+    X_train_rob_scaled = rob_scaler.fit_transform(X_train)
+    X_test_rob_scaled = rob_scaler.fit_transform(X_test)
+
+    # baseline model
+    knn_bsl = KNeighborsClassifier()
+    knn_bsl.fit(X_train_rob_scaled, y_train)
+    knn_bsl_prediction = knn_bsl.predict(X_test_rob_scaled)
+    gather_performance_metrics(
+        y_true=y_test, y_pred=knn_bsl_prediction, model_col="knn_baseline"
+    )
     # model 1 - KNN
     # parameter tuning
     from_ = 1
@@ -141,8 +165,8 @@ def main():
     for i in range(from_, to):
         model_col = f"k={i}"
         knn_clf = KNeighborsClassifier(n_neighbors=i)
-        knn_clf.fit(X_train_scaled, y_train)
-        knn_prediction = knn_clf.predict(X_test)
+        knn_clf.fit(X_train_rob_scaled, y_train)
+        knn_prediction = knn_clf.predict(X_test_rob_scaled)
         # need to transfotm returned df into a pd.Series to match the columns
         if i != from_:
             knn_metrics_rate.loc[model_col] = gather_performance_metrics(
@@ -180,18 +204,31 @@ def main():
             "penalty": ["l2", "l1"],
             "alpha": [round(i, 5) for i in range_inc(0.0001, 100, 0.0001, 1.05)],
             "early_stopping": [True, False],
-            "random_state": [42]
+            "random_state": [42],
         },
     )
-    sgd_rs_cv.fit(X_train, y_train)
-    sgd_prediction = sgd_rs_cv.predict(X_test)
+    sgd_rs_cv.fit(X_train_rob_scaled, y_train)
+    sgd_prediction = sgd_rs_cv.predict(X_test_rob_scaled)
     gather_performance_metrics(y_test, sgd_prediction, "sgd")
-
+    sgd_rs_cv.best_params_
 
     # model 3 - support vector machines
-    svm_clf = svm.LinearSVC()
-    svm_clf.fit(X_train_scaled, y_train)
-    svm_prediction = svm_clf.predict(X_test_scaled)
+    svm_clf = svm.SVC()
+    svm_clf.fit(X_train_rob_scaled, y_train)
+    svm_prediction = svm_clf.predict(X_test_rob_scaled)
+
+    svm_rs_cv = RandomizedSearchCV(
+        estimator=svm_clf,
+        param_distributions={
+            "C": [round(i, 5) for i in range_inc(0.5, 500, 0.5, 1.2)],
+            "break_ties": [True],
+            "decision_function_shape": ["ovo", "ovr"],
+            "kernel": ["linear", "poly", "rbf", "sigmoid"],
+            "gamma": ["scale", "auto"],
+            "degree": [i for i in range(2, 10)],
+        },
+    )
+    svm_rs_cv.fit(X_train_rob_scaled, y_train)
 
     # model 4 - XGBoost Classifier
     xgb_clf = XGBClassifier()
@@ -231,10 +268,19 @@ This curve quantifies how much of the total, 64-dimensional variance is containe
 Why use sklearn pipeline for SGDClassifier?
 Often in ML tasks you need to perform sequence of different transformations (find set of features, generate new features, select only some good features) of raw dataset before applying final estimator. Pipeline gives you a single interface for all 3 steps of transformation and resulting estimator. It encapsulates transformers and predictors inside.
 
+
+From he hist() plot of the training data:
+If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution.
+
+The dataset provides a good candidate for using a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
+
+
+
 Sources:
 https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
 https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
 Data Exploration - Model selection:
+https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
 Data Science from Scratch
 Machine learning with python
 Feature Egnineering
@@ -243,6 +289,8 @@ https://www.youtube.com/watch?v=aXpsCyXXMJE
 Models Evaluation:
     * https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
     * https://neptune.ai/blog/evaluation-metrics-binary-classification
-Hyperparameters Tuning: https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
+Hyperparameters Tuning:
+    * https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
+    * https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
 Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
 """
