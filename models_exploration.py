@@ -220,21 +220,22 @@ def main():
     svm_rs_cv = RandomizedSearchCV(
         estimator=svm_clf,
         param_distributions={
-            "C": [round(i, 5) for i in range_inc(0.5, 500, 0.5, 1.2)],
-            "break_ties": [True],
+            "C": [round(i, 5) for i in range_inc(0.5, 100, 0.5, 1.2)],
+            "break_ties": [False],
             "decision_function_shape": ["ovo", "ovr"],
-            "kernel": ["linear", "poly", "rbf", "sigmoid"],
-            "gamma": ["scale", "auto"],
-            "degree": [i for i in range(2, 10)],
+            "kernel": ["poly", "rbf", "sigmoid"]
         },
     )
     svm_rs_cv.fit(X_train_rob_scaled, y_train)
-
+    svm_prediction = svm_rs_cv.predict(X_test_rob_scaled)
+    gather_performance_metrics(y_true=y_test, y_pred=svm_prediction, model_col='svm'
+)
     # model 4 - XGBoost Classifier
     xgb_clf = XGBClassifier()
-    xgb_clf.fit(X_train, y_train)
-    xgb_prediction = xgb_clf.predict(X_test)
-
+    xgb_clf.fit(X_train_rob_scaled, y_train)
+    xgb_prediction = xgb_clf.predict(X_test_rob_scaled)
+    gather_performance_metrics(y_true=y_test, y_pred=xgbt_prediction,
+                               model_col='xgb')
     # TODO add viz where needed
     sns.heatmap(
         confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
