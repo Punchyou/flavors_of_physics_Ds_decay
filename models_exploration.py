@@ -1,35 +1,28 @@
-import pandas as pd
-import utils
 import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
-from sklearn.model_selection import train_test_split
-import seaborn as sns
-from sklearn import preprocessing
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
-from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import cross_val_predict
-from sklearn.pipeline import make_pipeline
-from sklearn import svm
-from sklearn.model_selection import cross_val_score
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV, cross_val_score
 import mypy
-from scipy.stats import kstest
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from imblearn.under_sampling import RandomUnderSampler
-from sklearn.metrics import (
-    confusion_matrix,
-    precision_score,
-    recall_score,
-    f1_score,
-    accuracy_score,
-    cohen_kappa_score,
-    matthews_corrcoef,
-    plot_precision_recall_curve,
-)
+from scipy.stats import kstest
+from sklearn import metrics, preprocessing, svm
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import (accuracy_score, cohen_kappa_score,
+                             confusion_matrix, f1_score, matthews_corrcoef,
+                             plot_precision_recall_curve, precision_score,
+                             recall_score)
+from sklearn.model_selection import (GridSearchCV, RandomizedSearchCV,
+                                     cross_val_predict, cross_val_score,
+                                     train_test_split)
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+from xgboost import XGBClassifier
+
+import utils
+
 
 # performance metrics funcs
 def false_negative_rate(tp: float, fn: float) -> float:
@@ -223,19 +216,19 @@ def main():
             "C": [round(i, 5) for i in range_inc(0.5, 100, 0.5, 1.2)],
             "break_ties": [False],
             "decision_function_shape": ["ovo", "ovr"],
-            "kernel": ["poly", "rbf", "sigmoid"]
+            "kernel": ["poly", "rbf", "sigmoid"],
         },
     )
     svm_rs_cv.fit(X_train_rob_scaled, y_train)
     svm_prediction = svm_rs_cv.predict(X_test_rob_scaled)
-    gather_performance_metrics(y_true=y_test, y_pred=svm_prediction, model_col='svm'
-)
+    gather_performance_metrics(y_true=y_test, y_pred=svm_prediction, model_col="svm")
+
+    # TODO add random search
     # model 4 - XGBoost Classifier
     xgb_clf = XGBClassifier()
     xgb_clf.fit(X_train_rob_scaled, y_train)
     xgb_prediction = xgb_clf.predict(X_test_rob_scaled)
-    gather_performance_metrics(y_true=y_test, y_pred=xgbt_prediction,
-                               model_col='xgb')
+    gather_performance_metrics(y_true=y_test, y_pred=xgbt_prediction, model_col="xgb")
     # TODO add viz where needed
     sns.heatmap(
         confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
