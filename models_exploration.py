@@ -116,8 +116,8 @@ def main():
 
     # TODO move it to the data exporation file
     # check distributions
-    X.hist(figsize=(60, 20))
-    plt.show()
+    # X.hist(figsize=(60, 20))
+    # plt.show()
 
     # undersample to create balanced dataset
     undersampler = RandomUnderSampler(random_state=42)
@@ -148,33 +148,22 @@ def main():
     knn_bsl = KNeighborsClassifier()
     knn_bsl.fit(X_train_rob_scaled, y_train)
     knn_bsl_prediction = knn_bsl.predict(X_test_rob_scaled)
-    gather_performance_metrics(
+    metrics_df = gather_performance_metrics(
         y_true=y_test, y_pred=knn_bsl_prediction, model_col="knn_baseline"
     )
-    # model 1 - KNN
-    # parameter tuning
-    from_ = 1
-    to = 60
-    for i in range(from_, to):
-        model_col = f"k={i}"
-        knn_clf = KNeighborsClassifier(n_neighbors=i)
-        knn_clf.fit(X_train_rob_scaled, y_train)
-        knn_prediction = knn_clf.predict(X_test_rob_scaled)
-        # need to transfotm returned df into a pd.Series to match the columns
-        if i != from_:
-            knn_metrics_rate.loc[model_col] = gather_performance_metrics(
-                y_true=y_test, y_pred=knn_prediction, model_col=model_col
-            ).squeeze()
-        else:
-            knn_metrics_rate = gather_performance_metrics(
-                y_true=y_test, y_pred=knn_prediction, model_col=model_col
-            )
-    knn_max_acc = knn_metrics_rate["Accuracy"].max()
-    best_k = knn_metrics_rate[knn_metrics_rate["Accuracy"] == knn_max_acc].index
 
+    # model 1 - KNN
+    knn_clf = KNeighborsClassifier()
+    # make use of grid search as is relatively fast for knn
+    knn_rs_cv = GridSearchCV(estimator=knn_clf, param_grid={'n_neighbors': range(1, 60)})
+    knn_rs_cv.fit(X=X_train_rob_scaled, y=y_train)
+    knn_prediction = knn_rs_cv.predict(X_test_rob_scaled)
+    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
+                                                              y_pred=knn_prediction,
+                                                              model_col="knn"))
     # plotting prec/recall curve
-    plot_precision_recall_curve(estimator=knn_clf, X=X_train, y=y_train)
-    plt.show()
+    # plot_precision_recall_curve(estimator=knn_clf, X=X_train, y=y_train)
+    # plt.show()
 
     # model 2 - SDG: Stohastic Gradient Descient (linear SVM)
     # minimizes the loss function and the regularization term (penalty, for
@@ -202,7 +191,9 @@ def main():
     )
     sgd_rs_cv.fit(X_train_rob_scaled, y_train)
     sgd_prediction = sgd_rs_cv.predict(X_test_rob_scaled)
-    gather_performance_metrics(y_test, sgd_prediction, "sgd")
+    metrics_df = metrics_df.append(gather_performance_metrics(y_test,
+                                                              sgd_prediction,
+                                                              "sgd"))
     sgd_rs_cv.best_params_
 
     # model 3 - support vector machines
@@ -217,31 +208,39 @@ def main():
             "break_ties": [False],
             "decision_function_shape": ["ovo", "ovr"],
             "kernel": ["poly", "rbf", "sigmoid"],
+            "random_state": [42] 
         },
     )
     svm_rs_cv.fit(X_train_rob_scaled, y_train)
     svm_prediction = svm_rs_cv.predict(X_test_rob_scaled)
-    gather_performance_metrics(y_true=y_test, y_pred=svm_prediction, model_col="svm")
+    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
+                                                              y_pred=svm_prediction,
+                                                              model_col="svm"))
 
     # TODO add random search
     # model 4 - XGBoost Classifier
     xgb_clf = XGBClassifier()
     xgb_clf.fit(X_train_rob_scaled, y_train)
     xgb_prediction = xgb_clf.predict(X_test_rob_scaled)
-    gather_performance_metrics(y_true=y_test, y_pred=xgbt_prediction, model_col="xgb")
+    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
+                                                              y_pred=xgb_prediction,
+                                                              model_col="xgb"))
+    metrics_df.to_csv('metrics_df_to_delete.csv')
     # TODO add viz where needed
-    sns.heatmap(
-        confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
-    )
-    plt.show()
+    # sns.heatmap(
+    #    confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
+    # )
+    # plt.show()
 
     # check if the model suffers from bias as accuracy is very high
     # plot the learning curve
-    utils.plot_learning_curve(
-        estimator=sgd_clf, X=X_train, y=y_train, n_jobs=8, title="title"
-    )
-    plt.show()
+    # utils.plot_learning_curve(
+    #     estimator=sgd_clf, X=X_train, y=y_train, n_jobs=8, title="title"
+    # )
+    # plt.show()
 
+if __name__ == "__main__":
+    main()
 
 """
 Dataset Issues:
