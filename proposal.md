@@ -21,38 +21,97 @@ You can see where the meson belongs in the subatomic particles map below. The pu
 Ander's Ryd in his [paper](https://wiki.classe.cornell.edu/pub/People/AndersRyd/DHadRMP.pdf) argues that the Ds decays have been a challenge, though scientists have been focused on their decays since the particles discovery. As a result the existing dataset of  this project ia sufficient and based on well-studied experiment observations.
 
 
-## Problem Statement	
+## Problem Statement
 
-The problem falls into the category of binary classification problems. Here I am challenged to find if a TODO: Ds->fipi decay will happen or not, based on a set of observations described in the next section.
+The problem falls into the category of binary classification problems. Based on particle collision events that cause the Ds decay and their properties, I am challenged to predict whether a decay happens in a collision or not.
 
-## Dataset and Inputs
+## Datasets and Inputs
 
-As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the TODO Ds -> fipi decay has a very similar topology as the TODO tau -> mmm decay and their datasets share the same features. In the tau decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the TODO Ds->fipi decay problem solution.
+As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the TODO Ds -> fipi decay has a very similar topology as the TODO tau -> mmm decay and their datasets share almost the same features. In the tau decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the TODO Ds->fipi decay problem solution.
 
-The datasets can be obtained with two different ways. Either from kaggle, by downloading the check_agreement.csv.zip from [here](https://www.kaggle.com/c/flavours-of-physics/data?select=check_agreement.csv.zip) (this requires a kaggle account) or download it from my github repo I have created for this project [here](TODO: add link to the project).
+This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happening (signal events) and ‘0’ for decays not happening (background events)) to train the classifier.
 
-Remove weights: In particle physics experiments, it is well-known how to split the signal/background by their “weights”. The method is called sPlot. This weight is a measurement derived from the likelihood/probability that the event is a Ds → φπ and the weights range from -∞ to ∞. Higher weight means likely this event is signal, lower weights means it’s likely to be background. 
+* FlightDistance - Distance between Ds and PV (primary vertex, the original protons collision point).
+* FlightDistanceError - Error on FlightDistance.
+* LifeTime - Life time of Ds candidate.
+* IP - Impact Parameter of Ds candidate.
+* IPSig - Significance of Impact Parameter.
+* VertexChi2 - χ2 of Ds vertex.
+* dira - Cosine of the angle between the Ds momentum and line between PV and tau vertex. 
+* pt - transverse momentum of Ds.
+* DOCAone - Distance of Closest Approach between p0 and p1.
+* DOCAtwo - Distance of Closest Approach between p1 and p2.
+* DOCAthree - Distance of Closest Approach between p0 and p2.
+* IP_p0p2 - Impact parameter of the p0 and p2 pair.
+* IP_p1p2 - Impact parameter of the p1 and p2 pair.
+* isolationa - Track isolation variable.
+* isolationb - Track isolation variable.
+* isolationc - Track isolation variable.
+* isolationd - Track isolation variable.
+* isolatione - Track isolation variable.
+* isolationf - Track isolation variable.
+* iso - Track isolation variable.
+* CDF1 - Cone isolation variable.
+* CDF2 - Cone isolation variable.
+* CDF3 - Cone isolation variable.
+* ISO_SumBDT - Track isolation variable.
+* p0_IsoBDT - Track isolation variable.
+* p1_IsoBDT - Track isolation variable.
+* p2_IsoBDT - Track isolation variable.
+* p0_track_Chi2Dof - Quality of p0 muon track.
+* p1_track_Chi2Dof - Quality of p1 muon track.
+* p2_track_Chi2Dof - Quality of p2 muon track.
+* p0_pt - Transverse momentum of p0 muon.
+* p0_p - Momentum of p0 muon.
+* p0_eta - Pseudorapidity of p0 muon.
+* p0_IP - Impact parameter of p0 muon.
+* p0_IPSig - Impact Parameter Significance of p0 muon.
+* p1_pt - Transverse momentum of p1 muon.
+* p1_p - Momentum of p1 muon.
+* p1_eta - Pseudorapidity of p1 muon.
+* p1_IP - Impact parameter of p1 muon.
+* p1_IPSig - Impact Parameter Significance of p1 muon.
+* p2_pt - Transverse momentum of p2 muon.
+* p2_p - Momentum of p2 muon.
+* p2_eta - Pseudorapidity of p2 muon.
+* p2_IP - Impact parameter of p2 muon.
+* p2_IPSig - Impact Parameter Significance of p2 muon.
+* SPDhits - Number of hits in the SPD detector.
+* min_ANNmuon - Muon identification. LHCb collaboration trains Artificial Neural Networks (ANN) from information from RICH, ECAL, HCAL, Muon system to distinguish muons from other particles. This variables denotes the minimum of the three muons ANN. min ANNmuon should not be used for training. This variable is absent in the test samples.
+* signal - This is the target variable for you to predict in the test samples.
 
 
-Solution Statement
+### Obtain the dataset
+There are three ways to get the data described above:
+* I recommend to download the resampled dataset from the github repo I created for this project. I intent to use this dataset, as the original is quite imbalanced. The resampled dataset is also smaller and much more easy to manage in the analysis. I made sure that the dataset have sufficient data for my analysis. If you want to get the original datasets, follow one of the next following ways.
+* From kaggle, by downloading the check_agreement.csv.zip from [here](https://www.kaggle.com/c/flavours-of-physics/data?select=check_agreement.csv.zip) (this requires a kaggle account)
+* Download it from my github repo I have created for this project [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data/resampled_data.csv.zip).
+
+
+> Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset, as according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary signal column. It will be not used in the solution whatsoever.
+
+
+## Solution Statement
+
+This is a binary classification problem so the solution will contain a binary classifier. In terms of the algorithm to be chosen for this solution, there is no constrain in using any classifier in particular or any spific one that is usually used for this family of problems. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the kaggle competition above, is mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true values on each sample.
+
+ I intent to train multiple models with data from a few different cleaning methods, but in the final solution I will only present the chosen data cleaning method and model based on evaluation from different performance metrics, including the KS test.
+
+## Benchmark Model
 	
+As a benchmark model I use a simple k-Nearest Neighbor classifier trained in the resampled data, with a 5-fold cross-validation and random search for tuning the k hyperparameter. The benchmark model script can be found [here].
 
-Student clearly describes a solution to the problem. The solution is applicable to the project domain and appropriate for the dataset(s) or input(s) given. Additionally, the solution is quantifiable, measurable, and replicable.
+The evaluation metrics and their scores for this model are the following:
 
-Benchmark Model
-	
-A benchmark model is provided that relates to the domain, problem statement, and intended solution. Ideally, the student's benchmark model provides context for existing methods or known information in the domain and problem given, which can then be objectively compared to the student's solution. The benchmark model is clearly defined and measurable.
-
-Evaluation Metrics
+## Evaluation Metrics
 
 Student proposes at least one evaluation metric that can be used to quantify the performance of both the benchmark model and the solution model presented. The evaluation metric(s) proposed are appropriate given the context of the data, the problem statement, and the intended solution.
 
-Project Design
+## Project Design
 	
-
 Student summarizes a theoretical workflow for approaching a solution given the problem. Discussion is made as to what strategies may be employed, what analysis of the data might be required, or which algorithms will be considered. The workflow and discussion provided align with the qualities of the project. Small visualizations, pseudocode, or diagrams are encouraged but not required.
 
-Presentation
+## Presentation
 
 Proposal follows a well-organized structure and would be readily understood by its intended audience. Each section is written in a clear, concise and specific manner. Few grammatical and spelling mistakes are present. All resources used and referenced are properly cited.
 
