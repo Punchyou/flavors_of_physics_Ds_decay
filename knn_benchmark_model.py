@@ -7,7 +7,9 @@ from sklearn.neighbors import KNeighborsClassifier
 df = pd.read_csv("data/resampled_data.csv", index_col="Unnamed: 0")
 X = df.drop("signal", axis=1)
 y = df["signal"]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42, test_size=0.2
+)
 
 # grid search to find optimal value based on accuracy
 acc = []
