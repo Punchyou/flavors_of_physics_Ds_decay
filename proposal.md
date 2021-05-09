@@ -9,36 +9,39 @@
     });
 </script>
 
-# Flavors of Physics: Meson Decay Project Proposal
+# Project Proposal: Flavors of Physics, The Strange D Meson Decay
 
 ## Domain Background
 
 
 This project is a particle physics problem. Its name is inspired by what physicists call "[flavor](https://en.wikipedia.org/wiki/Flavour_(particle_physics))", the species of an elementary particle. The  [Standard Model](https://en.wikipedia.org/wiki/Standard_Model) of  particle  physics  is  a  well  established  theory that explains the properties of fundamental particles and their interactions, describing the "flavor" of each particle. As mentioned in Charlotte Louise Mary Wallace CERN [Thesis](https://cds.cern.ch/record/2196092/files/CERN-THESIS-2016-064.pdf), the Standard Model theory has been tested by multiple experiments, but despite its successes, it is still incomplete and further research is needed. 
 
-The Standard Model counts six flavors of quarks and six flavors of leptons, as shown below.
+The Standard Model counts six flavors of quarks and six flavors of leptons, as shown below. "Flavor" is essentially a [quantum number](https://en.wikipedia.org/wiki/Flavour_(particle_physics)#Quantum_numbers) that characterizes the quantum state of those quarks.
 
-![standard_model](https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/1024px-Standard_Model_of_Elementary_Particles.svg.png)
+<div align="center">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/1024px-Standard_Model_of_Elementary_Particles.svg.png" alt="drawing" width="300"/>
+</div>
 
+ The Ds decay project is influenced by a CERN [kaggle competition](https://www.kaggle.com/c/flavours-of-physics/overview/description) problem about the flavors of physics. In the initial problem, scientists try to find if it is possible that the τ (*tau*) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) leptons. The problem I chose however concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) or *strange D meson*, a composite particle that consists of one quark or one antiquark, and how often it decays into a *φ* ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a *π* ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple features and observations. The decay is described by the following flow:
 
-"Flavor" is essentially a [quantum number](https://en.wikipedia.org/wiki/Flavour_(particle_physics)#Quantum_numbers) that characterizes the quantum state of those quarks. This project is influenced by a CERN [kaggle competition](https://www.kaggle.com/c/flavours-of-physics/overview/description) problem about those flavors of physics. In the initial problem, scientists try to find if it is possible that the τ (tau) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) lepton (both shown in the standard model image above). The current problem however concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) (strange D meson), a composite particle that consists of one quark or one antiquark, and how often it decays into a φ ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a π ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple features and observations. The decay is described below:
-
-$D_s -> φπ$
+$$D_s \to φπ$$
 
 You can see where the meson belongs in the subatomic particles map below. The purple part describes the composite particles.
 
-![composite_particles](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Particle_overview.svg/1920px-Particle_overview.svg.png)
+<div align="center">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Particle_overview.svg/1920px-Particle_overview.svg.png" alt="drawing" width="400"/>
+</div>
 
-Ander's Ryd in his [paper](https://wiki.classe.cornell.edu/pub/People/AndersRyd/DHadRMP.pdf) argues that the Ds decays have been a challenge, though scientists have been focused on their decays since the particles discovery. As a result the existing dataset of  this project ia sufficient and based on well-studied experiment observations.
+Ander's Ryd in his [paper](https://wiki.classe.cornell.edu/pub/People/AndersRyd/DHadRMP.pdf) argues that the D meson decays have been a challenge, though scientists have been focused on their decays since the particle discovery. As a result the existing dataset of this project is sufficient and based on well-studied experiment observations.
 
 
 ## Problem Statement
 
-The problem falls into the category of binary classification problems. Based on particle collision events that cause the Ds decay and their properties, I am challenged to predict whether a decay happens in a collision or not.
+The problem falls into the category of binary classification problems. Based on particle collision events (that cause the $D_s \to φπ$ decays) and their properties, I am challenged to predict whether the decay we are interested in happens in a collision or not.
 
 ## Datasets and Inputs
 
-As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s -> φπ$ decay has a very similar topology as the $tau -> mmm$ decay and their datasets share almost the same features. In the tau decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the $D_s -> φπ$ decay problem solution.
+As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
 
 This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happening (signal events) and ‘0’ for decays not happening (background events)) to train the classifier.
 
@@ -48,7 +51,7 @@ This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happ
 * IP - Impact Parameter of Ds candidate.
 * IPSig - Significance of Impact Parameter.
 * VertexChi2 - χ2 of Ds vertex.
-* dira - Cosine of the angle between the Ds momentum and line between PV and tau vertex. 
+* dira - Cosine of the angle between the Ds momentum and line between PV and *tau* vertex. 
 * pt - transverse momentum of Ds.
 * DOCAone - Distance of Closest Approach between p0 and p1.
 * DOCAtwo - Distance of Closest Approach between p1 and p2.
@@ -94,99 +97,59 @@ This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happ
 
 ### Obtain the dataset
 There are three ways to get the data described above:
-* I recommend to download the resampled dataset from the github repo I created for this project. I intent to use this dataset, as the original is quite imbalanced. The resampled dataset is also smaller and much more easy to manage in the analysis. I made sure that the dataset have sufficient data for my analysis. If you want to get the original datasets, follow one of the next following ways.
-* From kaggle, by downloading the check_agreement.csv.zip from [here](https://www.kaggle.com/c/flavours-of-physics/data?select=check_agreement.csv.zip) (this requires a kaggle account)
-* Download it from my github repo I have created for this project [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data/resampled_data.csv.zip).
+* I recommend to download the resampled dataset from the github repo I created for this project. I intent to use this resampled dataset, as the original is heavily imbalanced. The resampled dataset is also smaller and much more easy to manage, which makes it more suitable for this Udacity project. I made sure that the dataset have sufficient data for my analysis. If you want to get the original dataset, follow the next point.
+* From kaggle, by downloading the *check_agreement.csv.zip* from [here](https://www.kaggle.com/c/flavours-of-physics/data?select=check_agreement.csv.zip) (this requires a kaggle account).
 
-
-> Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset, as according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary signal column. It will be not used in the solution whatsoever.
+> Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset, as according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary *signal* column. It will be not used in the solution whatsoever.
 
 
 ## Solution Statement
 
-This is a binary classification problem so the solution will contain a binary classifier. There is no constrain in using any classifier in particular for this family of problems. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the kaggle competition above, is mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true values on each sample.
-
- I intent to train multiple models with data from a few different cleaning methods, but in the final solution I will only present the chosen data cleaning method and model based on evaluation from different performance metrics, including the KS test.
+This is a binary classification problem so the solution will involve a binary classifier. There is no constrain in using any classifier in particular for this family of problems. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the kaggle competition described so far, is it mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. I intent to train multiple models in combination with different data cleaning methods, but in the final solution I will only present the chosen data cleaning method and model based on evaluation from different performance metrics, including the KS test.
 
 ## Benchmark Model
 	
-As a benchmark model I use a simple k-Nearest Neighbor classifier trained in the resampled data, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here], but the code is presented below:
+As a benchmark model I use a simple k-Nearest Neighbor classifier trained in the resampled data, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN model with k=52, with accuracy 71%.
 
-```py
-import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-
-df = pd.read_csv("data/resampled_data.csv", index_col="Unnamed: 0")
-X = df.drop("signal", axis=1)
-y = df["signal"]
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, random_state=42, test_size=0.2
-)
-
-# grid search to find optimal value based on accuracy
-acc = []
-from_ = 1
-to = 80
-for i in range(from_, to):
-    knn = KNeighborsClassifier(n_neighbors=i)
-    knn.fit(X_train, y_train.values)
-    pred_i = knn.predict(X_test)
-    acc.append(metrics.accuracy_score(y_test, pred_i))
-
-# plot accuracy
-plt.figure(figsize=(10, 6))
-plt.plot(
-    range(1, 80),
-    acc,
-    color="blue",
-    linestyle="dashed",
-    marker="o",
-    markerfacecolor="red",
-    markersize=10,
-)
-plt.title("Accuracy vs. K Value")
-plt.xlabel("K")
-plt.ylabel("Accuracy")
-plt.text(
-    from_ + 1,
-    max(acc),
-    f"Max accuracy: {round(max(acc), 3)},  K = {acc.index(max(acc))}",
-)
-plt.show()
-```
-The execution of the code above produces the following plot. The plot show the accuracy of the kNN model for each one of the k values (from 1 to 80):
-
-![accuracy_plot](https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/knn_benchmark_acc.png)
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/knn_benchmark_acc.png" alt="drawing" width="400"/>
+</div>
 
 ## Evaluation Metrics
 
-The evaluation metric used to choose the benchmark model has been briefly examined in the Benchmark Model Section, and it is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples.
+The evaluation metric used to choose the k values of the kNN benchmark model is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples.
 
 ## Project Design
 A high level workflow for the solution approach:
-1. Understand the problem - identify the problem category: I already know that this is a binary classification problem, which will help me choose the models to train.
-2. Data mining: Obtain the necessary datasets for this analysis.
-3. Data Visualization, Cleaning and Engineering: Check if the data are balanced, if there are linear correlation between the features to determine which features to keep or check if the data will work better with a specific scaling. Dimensionality reduction techniques may help visualize the data to have a better understanding of their shape.
-4. Model Training/Tuning: Train a selection of binary classification algorithms, trying different data scaling, different number of features and cross validation to avoid overfitting. Make use of search techniques like grid or random search to tune the hyperparameters. Models like Support Vector Machines, Stochastic Gradient Descent or XGBoost classifiers might be suitable for this problem as they can deal with multiple features efficiently.
-5. Model Evaluation: A number of performance metrics will be used for this step. Evaluation metrics suitable for this problem might be false positive rate, false negative rate, specificity, negative predictive value, accuracy or Kolmogorov–Smirnov test.
+1. **Understand the problem - identify the problem category**: I already know that this is a binary classification problem, which will help me choose the models to train.
+2. **Data mining**: Obtain the necessary datasets for this analysis, as mentioned in the associated section of data input above.
+3. **Data Visualization, Cleaning and Engineering**: Check if the data is balanced, if there are linear correlation between the features to determine which features to keep or check if the data will work better with a specific scaling. Distribution plots or even dimensionality reduction techniques may help visualize the data to have a better understanding of their shape and behavior.
+4. **Model Training/Tuning**: Train a selection of binary classification algorithms, trying different data scales, different number of features and cross validation to avoid overfitting. Make use of search techniques like grid or random search to tune the hyperparameters. Models like Support Vector Machines, Stochastic Gradient Descent or XGBoost classifiers might be suitable for this problem as they can deal with multiple features efficiently.
+5. **Model Evaluation**: A number of performance metrics will be used for this step. Evaluation metrics suitable for this problem might be [false positive rate, false negative rate, specificity, negative predictive value](https://neptune.ai/blog/evaluation-metrics-binary-classification), accuracy or Kolmogorov–Smirnov test.
 
-A workflow that sums up the steps above follows. This workflow is part of a typical data science lifecycle, as presented [here](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle).
+A workflow that sums up the steps above is presented below. This workflow is part of a typical data science lifecycle, as presented [here](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle).
 
-![project_workflow](https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/project_ds_workflow.png)
-
-### Why I chose this project?
-I love physics and I was always curious about how and why subatomic particles behave the way they do. I have a bachelor's degree in physics, but I started having an interest in data science after my studies. I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my interest for both fields. I specifically chose a particle physics project as I know that scientists at CERN often provide real data to the public based on their observations, for that I would be able to find both an interesting problem and an associated online dataset, with sufficient data for a data science analysis.
-
-
-* Mention why I chose the other meson decay problem over the lepton decay.
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/project_ds_workflow.png" alt="drawing" width="350"/>
+</div>
 
 
-### Sources:
+## Why I chose this project?
+I have a bachelor's degree in physics, but I haven't worked as a physicist so far. I started having an interest in data science in recent years and I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my passion for both fields. I specifically chose a particle physics project as I know that scientists at CERN often provide data to the public based on their observations, and that I would be able to find both an interesting machine learning problem and a dataset online to work with, with sufficient data for a data science analysis. I initially started working on the tau decay problem described briefly in the begging of the proposal, but the classifier predict the signal with high performance without much hyperparameters tuning due the nature of the dataset. I believe that this wouldn't help me learn as a much as a problem that would require further model improvements to get high performing results, so I switched to the Ds decay which is a similar problem with a lower benchmark performance.
+
+
+## Sources:
 * https://en.wikipedia.org/wiki/Flavour_(particle_physics)
-* [Meson Decays](https://cds.cern.ch/record/2713513?ln=en)
-
-### Further sources:
-* [Search for τ → 3μ decays using τ leptons produced in D and B meson decays](http://cds.cern.ch/record/2668282/files/BPH-17-004-pas.pdf)
+* https://cds.cern.ch/record/2713513?ln=en
+* https://en.wikipedia.org/wiki/Standard_Model
+* https://cds.cern.ch/record/2196092/files/CERN-THESIS-2016-064.pdf
+* https://en.wikipedia.org/wiki/Particle_decay
+* https://en.wikipedia.org/wiki/D_meson
+* https://en.wikipedia.org/wiki/Phi_meson
+* https://en.wikipedia.org/wiki/Pion
+* https://wiki.classe.cornell.edu/pub/People/AndersRyd/DHadRMP.pdf
+* https://www.kaggle.com/c/flavours-of-physics/overview
+* https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test
+* https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle
+* http://cds.cern.ch/record/2668282/files/BPH-17-004-pas.pdf
+* https://neptune.ai/blog/evaluation-metrics-binary-classification
