@@ -1,6 +1,5 @@
----
-useMath: true
----
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 # Flavors of Physics: Meson Decay Project Proposal
 
 ## Domain Background
@@ -15,11 +14,7 @@ The Standard Model counts six flavors of quarks and six flavors of leptons, as s
 
 "Flavor" is essentially a [quantum number](https://en.wikipedia.org/wiki/Flavour_(particle_physics)#Quantum_numbers) that characterizes the quantum state of those quarks. This project is influenced by a CERN [kaggle competition](https://www.kaggle.com/c/flavours-of-physics/overview/description) problem about those flavors of physics. In the initial problem, scientists try to find if it is possible that the τ (tau) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) lepton (both shown in the standard model image above). The current problem however concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) (strange D meson), a composite particle that consists of one quark or one antiquark, and how often it decays into a φ ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a π ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple features and observations. The decay is described below:
 
-<dic class="math">
-\begin{equation}
-    DS -> φπ
-\end{equation}
-<dic/>
+$DS -> φπ$
 
 You can see where the meson belongs in the subatomic particles map below. The purple part describes the composite particles.
 
