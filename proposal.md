@@ -1,5 +1,14 @@
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+            displayMath: [['$$','$$']],
+            inlineMath: [['$','$']],
+        },
+    });
+</script>
+
 # Flavors of Physics: Meson Decay Project Proposal
 
 ## Domain Background
@@ -14,7 +23,7 @@ The Standard Model counts six flavors of quarks and six flavors of leptons, as s
 
 "Flavor" is essentially a [quantum number](https://en.wikipedia.org/wiki/Flavour_(particle_physics)#Quantum_numbers) that characterizes the quantum state of those quarks. This project is influenced by a CERN [kaggle competition](https://www.kaggle.com/c/flavours-of-physics/overview/description) problem about those flavors of physics. In the initial problem, scientists try to find if it is possible that the τ (tau) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) lepton (both shown in the standard model image above). The current problem however concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) (strange D meson), a composite particle that consists of one quark or one antiquark, and how often it decays into a φ ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a π ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple features and observations. The decay is described below:
 
-$DS -> φπ$
+$D_s -> φπ$
 
 You can see where the meson belongs in the subatomic particles map below. The purple part describes the composite particles.
 
@@ -29,7 +38,7 @@ The problem falls into the category of binary classification problems. Based on 
 
 ## Datasets and Inputs
 
-As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the TODO Ds -> fipi decay has a very similar topology as the TODO tau -> mmm decay and their datasets share almost the same features. In the tau decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the TODO Ds->fipi decay problem solution.
+As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s -> φπ$ decay has a very similar topology as the $tau -> mmm$ decay and their datasets share almost the same features. In the tau decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the $D_s -> φπ$ decay problem solution.
 
 This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happening (signal events) and ‘0’ for decays not happening (background events)) to train the classifier.
 
@@ -171,7 +180,7 @@ A workflow that sums up the steps above follows. This workflow is part of a typi
 ### Why I chose this project?
 I love physics and I was always curious about how and why subatomic particles behave the way they do. I have a bachelor's degree in physics, but I started having an interest in data science after my studies. I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my interest for both fields. I specifically chose a particle physics project as I know that scientists at CERN often provide real data to the public based on their observations, for that I would be able to find both an interesting problem and an associated online dataset, with sufficient data for a data science analysis.
 
-TODO
+
 * Mention why I chose the other meson decay problem over the lepton decay.
 
 
