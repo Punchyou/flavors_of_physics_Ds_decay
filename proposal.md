@@ -14,7 +14,7 @@
 ## Domain Background
 
 
-This project is a particle physics problem. Its name is inspired by what physicists call "[flavor](https://en.wikipedia.org/wiki/Flavour_(particle_physics))", the species of an elementary particle. The  [Standard Model](https://en.wikipedia.org/wiki/Standard_Model) of particle physics is a well-established theory that explains the properties of fundamental particles and their interactions, describing the "flavor" of each particle. As mentioned in Charlotte Louise Mary Wallace CERN [Thesis](https://cds.cern.ch/record/2196092/files/CERN-THESIS-2016-064.pdf), the Standard Model theory has been tested by multiple experiments, but despite its successes, it is still incomplete and further research is needed. 
+This project is a particle physics problem. Its name is inspired by what physicists call "[flavor](https://en.wikipedia.org/wiki/Flavour_(particle_physics))", the species of an elementary particle. The  [Standard Model](https://en.wikipedia.org/wiki/Standard_Model) of particle physics is a well-established theory that explains the properties of fundamental particles and their interactions, describing the "flavor" of each particle. As mentioned in Charlotte Louise Mary Wallace CERN [Thesis](https://cds.cern.ch/record/2196092/files/CERN-THESIS-2016-064.pdf), the Standard Model theory has been tested by multiple experiments, but despite its successes, it is still incomplete, and further research is needed. 
 
 The Standard Model counts six flavors of quarks and six flavors of leptons, as shown below. "Flavor" is essentially a [quantum number](https://en.wikipedia.org/wiki/Flavour_(particle_physics)#Quantum_numbers) that characterizes the quantum state of those quarks.
 
@@ -22,7 +22,7 @@ The Standard Model counts six flavors of quarks and six flavors of leptons, as s
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/1024px-Standard_Model_of_Elementary_Particles.svg.png" alt="drawing" width="300"/>
 </div>
 
- The Ds decay project is influenced by a CERN [kaggle competition problem](https://www.kaggle.com/c/flavours-of-physics/overview/description) about the flavors of physics. In the initial problem, scientists try to find if it is possible the τ (*tau*) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) leptons. The problem I chose however concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) or *strange D meson*, a composite particle that consists of one quark or one antiquark, and how often it decays into a *φ* ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a *π* ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple factors. The decay is described by the following flow:
+ The Ds decay project is influenced by a CERN [kaggle competition problem](https://www.kaggle.com/c/flavours-of-physics/overview/description) about the flavors of physics. In the initial problem, scientists try to find if it is possible the τ (*tau*) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) leptons. The problem I chose, however, concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) or *strange D meson*, a composite particle that consists of one quark or one antiquark, and how often it decays into a *φ* ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a *π* ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple factors. The decay is described by the following flow:
 
 $$D_s \to φπ$$
 
@@ -41,10 +41,11 @@ The problem falls into the category of binary classification problems. Based on 
 
 ## Datasets and Inputs
 
-As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the the CERN evaluation process for that problem. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
+As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the CERN evaluation process. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
 
-This is a labelled dataset (the label ‘signal’ being ‘1’ for decays happening (signal events) and ‘0’ for decays not happening (background events)) to train the classifier.
+This is a labeled dataset of 16.410 samples and 46 features, which are described below. The *signal* column classifies the samples into *signal events* (decays happening) denoted with *1* and *background events* (decays not happening) denoted with *0*. The dataset is balanced, with 8.205 signal events and 8.205 background events. 
 
+The features of the dataset are described below:
 * FlightDistance - Distance between Ds and PV (primary vertex, the original protons collision point).
 * FlightDistanceError - Error on FlightDistance.
 * LifeTime - Life time of Ds candidate.
@@ -113,19 +114,24 @@ As a benchmark model, I use a simple k-Nearest Neighbor classifier, trained with
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/knn_benchmark_acc.png" alt="drawing" width="400"/>
 </div>
 
+
 ## Evaluation Metrics
 
-The evaluation metric used to choose the k values of the kNN benchmark model is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples.
+The evaluation metric used to choose the k values of the kNN benchmark model is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide missleading information about the models performance.
 
 ## Project Design
-A high level workflow for the solution approach:
+A high-level workflow for the solution approach is the following:
 1. **Understand the problem - identify the problem category**: I already know that this is a binary classification problem, which will help me choose the models to train.
+
 2. **Data mining**: Obtain the necessary datasets for this analysis, as mentioned in the associated section of data input above.
-3. **Data Visualization, Cleaning, and Engineering**: Check if the data is balanced, if there is a linear correlation between the features to determine which features to keep, or check if the data will work better with a specific scaling. Distribution plots or even dimensionality reduction techniques may help visualize the data to have a better understanding of their shape and behavior.
-4. **Model Training/Tuning**: Train a selection of binary classification algorithms, trying different data scales, different number of features, and cross-validation to avoid overfitting. Make use of search techniques like grid or random search to tune the hyperparameters. Models like Support Vector Machines, Stochastic Gradient Descent, or XGBoost classifiers might be suitable for this problem as they can deal with multiple features efficiently.
+
+3. **Data Visualization, Cleaning, and Engineering**: Check if the data is balanced, if there is a linear correlation between the features to determine which features to keep, or check if the data will work better with a specific scaling. Distribution plots, or even dimensionality reduction techniques, may help with the data visualization.
+
+4. **Model Training/Tuning**: Train a selection of binary classification algorithms, trying different data scales, different number of features, and cross-validation to avoid overfitting. Make use of search techniques like grid or random search to tune the hyperparameters. Models like Support Vector Machines, Stochastic Gradient Descent, XGBoost, CatBoost, LightGBM or even a custom ensemble classifier might be suitable for this problem.
+
 5. **Model Evaluation**: A number of performance metrics will be used for this step. Evaluation metrics suitable for this problem might be [false positive rate, false negative rate, true negative rate, negative predictive value](https://neptune.ai/blog/evaluation-metrics-binary-classification), accuracy or Kolmogorov–Smirnov test.
 
-A workflow that sums up the steps above is presented below. This workflow is part of a typical data science lifecycle, as presented [here](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle).
+A workflow that sums up the steps above is showm below. This workflow is part of a typical data science lifecycle, as presented [here](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle).
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/project_ds_workflow.png" alt="drawing" width="350"/>
@@ -133,7 +139,7 @@ A workflow that sums up the steps above is presented below. This workflow is par
 
 
 ## Why I chose this project?
-I have a bachelor's degree in physics, but I have not worked as a physicist so far. I started having an interest in data science in recent years and I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my passion for both fields. I specifically chose a CERN particle physics project as I know that scientists at CERN often provide data to the public based on their observations. I was able to find both an interesting machine learning problem and a dataset online to work with, with sufficient data for a data science analysis. I initially started working on the tau decay problem, but even simple classifiers predict the signal with high performance without much hyperparameters tuning due to the nature of the dataset. This problem would not help me learn as much as a problem that requires further model improvements to get high-performing results, so I switched to the Ds decay which is a similar problem with lower benchmark performance.
+I have a bachelor's degree in physics, but I have not worked as a physicist so far. I started having an interest in data science in recent years, and I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my passion for both fields. I specifically chose a CERN particle physics project as I know that scientists at CERN often provide data to the public based on their observations. I was able to find both an interesting machine learning problem and a dataset online to work with, with sufficient data for a data science analysis. I initially started working on the tau decay problem, but even simple classifiers predict the signal with high performance without much hyperparameters tuning due to the nature of the dataset. This problem would not help me learn as much as a problem that requires further model improvements to get high-performing results, so I switched to the Ds decay which is a similar problem with lower benchmark performance.
 
 
 ## Sources:
@@ -151,3 +157,7 @@ I have a bachelor's degree in physics, but I have not worked as a physicist so f
 * https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle
 * http://cds.cern.ch/record/2668282/files/BPH-17-004-pas.pdf
 * https://neptune.ai/blog/evaluation-metrics-binary-classification
+* https://machinelearningmastery.com/failure-of-accuracy-for-imbalanced-class-distributions/
+* https://en.wikipedia.org/wiki/Accuracy_paradox
+* http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/
+* https://www.kaggle.com/arthurtok/introduction-to-ensembling-stacking-in-python
