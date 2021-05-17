@@ -19,90 +19,15 @@ from sklearn.model_selection import (GridSearchCV, RandomizedSearchCV,
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
-from xgboost import XGBClassifier
-
-import utils
-
-
-# performance metrics funcs
-def false_negative_rate(tp: float, fn: float) -> float:
-    # flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
-    # we want this to be close to 0
-    return fn / (tp + fn)
+from xgboost import XGBClassifier, cv as xgb_cv, DMatrix as xgb_dmatrix, train as xgb_train
+from bayes_opt import BayesianOptimization
+from utils import *
 
 
-def negative_predictive_value(tn: float, fn: float) -> float:
-    # Negative Predictive Value - measures how many predictions out of all negative
-    # predictions were correct
-    # we want this to be close to 1
-    return tn / (tn + fn)
-
-
-def false_positive_rate(fp: float, tn: float) -> float:
-    # false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
-    # we want this to be close to 0
-    return fp / (fp + tn)
-
-
-def true_negative_rate(tn: float, fp: float) -> float:
-    return tn / (tn + fp)
-
-
-def error_score(y_true: list, y_pred: list):
-    return np.mean(y_pred != y_true)
-
-
-def gather_performance_metrics(
-    y_true: list, y_pred: list, model_col: str
-) -> pd.DataFrame:
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-
-    # false negative rate
-    fnr = false_negative_rate(tp, fn)
-    npv = negative_predictive_value(tn, fn)
-    fpr = false_positive_rate(fp, tn)
-    tnr = true_negative_rate(tn, fp)
-    # true positive rate or sensitivity - how many observations out of all positive
-    # observations have we classified as positive
-    # we want this to be close to 1
-    recall = recall_score(y_true, y_pred)
-
-    # positive predictive value - how many observations predicted as positive are in fact positive.
-    precision = precision_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-
-    # accuracy - how many observations, both positive and negative, were correctly
-    # classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
-    accuracy = accuracy_score(y_true, y_pred)
-    error = error_score(y_true, y_pred)
-    ks = kstest(y_pred, y_true)[0]
-    return pd.DataFrame(
-        data=[[accuracy, error, ks, fnr, npv, fpr, tnr, recall, precision, f1]],
-        columns=[
-            "Accuracy",
-            "Error",
-            "KS",
-            "FNR",
-            "NPV",
-            "FPR",
-            "TNR",
-            "Recall",
-            "Precision",
-            "F1",
-        ],
-        index=[model_col],
-    )
-
-
-def range_inc(start, stop, step, inc):
-    i = start
-    while i < stop:
-        yield i
-        i += step
-        step += i * inc
 
 
 def main():
+    # TODO: remote * imports
     # TODO add pipeline for models that take in scaled data
     # TODO add a func to fit and return predictions
     # TODO add a baseline model
@@ -152,81 +77,137 @@ def main():
         y_true=y_test, y_pred=knn_bsl_prediction, model_col="knn_baseline"
     )
 
-    # model 1 - KNN
-    knn_clf = KNeighborsClassifier()
-    # make use of grid search as is relatively fast for knn
-    knn_rs_cv = GridSearchCV(estimator=knn_clf, param_grid={'n_neighbors': range(1, 60)})
-    knn_rs_cv.fit(X=X_train_rob_scaled, y=y_train)
-    knn_prediction = knn_rs_cv.predict(X_test_rob_scaled)
-    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
-                                                              y_pred=knn_prediction,
-                                                              model_col="knn"))
-    # plotting prec/recall curve
-    # plot_precision_recall_curve(estimator=knn_clf, X=X_train, y=y_train)
-    # plt.show()
+    # # model 1 - KNN
+    # knn_clf = KNeighborsClassifier()
+    # # make use of grid search as is relatively fast for knn
+    # knn_rs_cv = GridSearchCV(estimator=knn_clf, param_grid={'n_neighbors': range(1, 60)})
+    # knn_rs_cv.fit(X=X_train_rob_scaled, y=y_train)
+    # knn_prediction = knn_rs_cv.predict(X_test_rob_scaled)
+    # metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
+    #                                                           y_pred=knn_prediction,
+    #                                                           model_col="knn"))
+    # # plotting prec/recall curve
+    # # plot_precision_recall_curve(estimator=knn_clf, X=X_train, y=y_train)
+    # # plt.show()
 
-    # model 2 - SDG: Stohastic Gradient Descient (linear SVM)
-    # minimizes the loss function and the regularization term (penalty, for
-    # overfitting)
-    sgd_clf = SGDClassifier()
-    sgd_rs_cv = RandomizedSearchCV(
-        estimator=sgd_clf,
-        param_distributions={
-            "loss": [
-                "log",
-                "hinge",
-                "modified_huber",
-                "squared_hinge",
-                "perceptron",
-                "squared_loss",
-                "huber",
-                "epsilon_insensitive",
-                "squared_epsilon_insensitive",
-            ],
-            "penalty": ["l2", "l1"],
-            "alpha": [round(i, 5) for i in range_inc(0.0001, 100, 0.0001, 1.05)],
-            "early_stopping": [True, False],
-            "random_state": [42],
-        },
-    )
-    sgd_rs_cv.fit(X_train_rob_scaled, y_train)
-    sgd_prediction = sgd_rs_cv.predict(X_test_rob_scaled)
+    # # model 2 - SDG: Stohastic Gradient Descient (linear SVM)
+    # # minimizes the loss function and the regularization term (penalty, for overfitting)
+    # sgd_clf = SGDClassifier()
+    # sgd_rs_cv = RandomizedSearchCV(
+    #     estimator=sgd_clf,
+    #     param_distributions={
+    #         "loss": [
+    #             "log",
+    #             "hinge",
+    #             "modified_huber",
+    #             "squared_hinge",
+    #             "perceptron",
+    #             "squared_loss",
+    #             "huber",
+    #             "epsilon_insensitive",
+    #             "squared_epsilon_insensitive",
+    #         ],
+    #         "penalty": ["l2", "l1"],
+    #         "alpha": list(range_inc(0.001, 50, 0.01, 1.5, 3)),
+    #         "early_stopping": [True],
+    #         "random_state": [42],
+    #     },
+    # )
+    # sgd_rs_cv.fit(X_train_rob_scaled, y_train)
+    # sgd_prediction = sgd_rs_cv.predict(X_test_rob_scaled)
+    # metrics_df = metrics_df.append(gather_performance_metrics(y_test,
+    #                                                           sgd_prediction,
+    #                                                           "sgd"))
+
+    # # model 3 - support vector machines
+    # svm_clf = svm.SVC()
+    # svm_clf.fit(X_train_rob_scaled, y_train)
+    # svm_prediction = svm_clf.predict(X_test_rob_scaled)
+
+    # svm_rs_cv = RandomizedSearchCV(
+    #     estimator=svm_clf,
+    #     param_distributions={
+    #         "C": list(range_inc(0.5, 100, 0.9, 1.2)),
+    #         "break_ties": [False],
+    #         "decision_function_shape": ["ovo", "ovr"],
+    #         "kernel": ["poly", "rbf", "sigmoid"],
+    #         "random_state": [42] 
+    #     }
+    # )
+    # svm_rs_cv.fit(X_train_rob_scaled, y_train)
+    # svm_prediction = svm_rs_cv.predict(X_test_rob_scaled)
+    # metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
+    #                                                           y_pred=svm_prediction,
+    #                                                           model_col="svm"))
+
+    # # metrics_df.to_csv('metrics_df_to_delete.csv')
+    # clf1 = XGBClassifier()
+    # clf1.fit(X_train_rob_scaled, y_train)
+    # xgb_pred = clf1.predict(X_test_rob_scaled)
+    # metrics_df = metrics_df.append(gather_performance_metrics(y_test,
+    #                                                           xgb_pred,
+    #                                                           "xgb"))
+
+    # ---- add to a different script ----
+        # model 4 - XGBoost Classifieri
+        # params have to have the same number of values
+
+    param_bounds={
+        "n_estimators": (0, 1000),
+        'max_depth': (3, 10),
+        "learning_rate": (0.1, 0.8),
+        "gamma": (0, 100),
+        "min_child_weight": (1, 1000),
+        "max_delta_step": (0, 10),
+        "reg_alpha": (0, 3),
+        "reg_lambda": (1, 4),
+        }
+
+    dtrain = xgb_dmatrix(X_train_rob_scaled, label=y_train)
+    def xgb_evaluate(max_depth, gamma, colsample_bytree):
+        params = {"objective": "binary:logistic",
+                  'eval_metric': 'logloss',
+                  "learning_rate": 0.1,
+                  'max_depth': int(max_depth),
+                  'subsample': 0.8,
+                  'gamma': gamma,
+                  'colsample_bytree': colsample_bytree,
+                  "random_state": 42}
+        # Used around 1000 boosting rounds in the full model
+        cv_result = xgb_cv(params=params, dtrain=dtrain, nfold=5)
+
+        # Bayesian optimization only knows how to maximize, not minimize, so return the negative RMSE
+        return -1.0 * cv_result['test-logloss-mean'].iloc[-1]
+
+    xgb_bo = BayesianOptimization(xgb_evaluate, {'max_depth': (3, 7),
+                                                 'gamma': (0, 1),
+                                                 'colsample_bytree': (0.3, 0.8)
+                                                 }, random_state=(42))
+    xgb_bo.maximize(init_points=3, n_iter=5, acq='ei')
+
+    bo_res = pd.DataFrame(xgb_bo.res)
+    max_params = bo_res.loc[bo_res['target']==bo_res['target'].max(), "params"].values[0]
+    max_params["max_depth"] = int(max_params["max_depth"])
+    max_params["objective"] = "binary:logistic"
+    max_params["random_state"]=42
+    max_params_df = pd.DataFrame(max_params, index=['max_params'])
+
+    # ------------ TESTING ---------------------
+    # Train a new model with the best parameters from the search
+    clf = XGBClassifier(**max_params)
+    clf.fit(X_train_rob_scaled, y_train)
+    y_pred = clf.predict(X_test_rob_scaled)
     metrics_df = metrics_df.append(gather_performance_metrics(y_test,
-                                                              sgd_prediction,
-                                                              "sgd"))
-    sgd_rs_cv.best_params_
+                                                              y_pred,
+                                                              "xgb_optimized5"))
+    metrics_df.to_csv("results_to_delete.csv")
 
-    # model 3 - support vector machines
-    svm_clf = svm.SVC()
-    svm_clf.fit(X_train_rob_scaled, y_train)
-    svm_prediction = svm_clf.predict(X_test_rob_scaled)
+    # # Report testing and training RMSE
+    # print(np.sqrt(mean_squared_error(y_test, y_pred)))
+    # print(np.sqrt(mean_squared_error(y_train, y_train_pred)))
 
-    svm_rs_cv = RandomizedSearchCV(
-        estimator=svm_clf,
-        param_distributions={
-            "C": [round(i, 5) for i in range_inc(0.5, 100, 0.5, 1.2)],
-            "break_ties": [False],
-            "decision_function_shape": ["ovo", "ovr"],
-            "kernel": ["poly", "rbf", "sigmoid"],
-            "random_state": [42] 
-        },
-    )
-    svm_rs_cv.fit(X_train_rob_scaled, y_train)
-    svm_prediction = svm_rs_cv.predict(X_test_rob_scaled)
-    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
-                                                              y_pred=svm_prediction,
-                                                              model_col="svm"))
 
-    # TODO add random search
-    # model 4 - XGBoost Classifier
-    xgb_clf = XGBClassifier()
-    xgb_clf.fit(X_train_rob_scaled, y_train)
-    xgb_prediction = xgb_clf.predict(X_test_rob_scaled)
-    metrics_df = metrics_df.append(gather_performance_metrics(y_true=y_test,
-                                                              y_pred=xgb_prediction,
-                                                              model_col="xgb"))
-    metrics_df.to_csv('metrics_df_to_delete.csv')
-    # TODO add viz where needed
+# TODO add viz where needed
     # sns.heatmap(
     #    confusion_matrix(y_test, y_pred), annot=[["tn", "fp"], ["fn", "tp"]], fmt="s"
     # )
@@ -242,48 +223,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-"""
-Dataset Issues:
-    * High acciracy due to the dataset
-    * Pickec another dataset, but it was imbalanced
-    * Had to make it balances by resampling the dataset
-
-
-How to choose the best n components for pca:
-* PCA project the data to less dimensions, so we need to scale the data
-beforehand.
-
-* A vital part of using PCA in practice is the ability to estimate how many components are needed to describe the data. This can be determined by looking at the cumulative explained variance ratio as a function of the number of components
-This curve quantifies how much of the total, 64-dimensional variance is contained within the first N components.
-
-* From the pca graph, looks like that the data are described from 3 variables.
-
-Why use sklearn pipeline for SGDClassifier?
-Often in ML tasks you need to perform sequence of different transformations (find set of features, generate new features, select only some good features) of raw dataset before applying final estimator. Pipeline gives you a single interface for all 3 steps of transformation and resulting estimator. It encapsulates transformers and predictors inside.
-
-
-From he hist() plot of the training data:
-If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution.
-
-The dataset provides a good candidate for using a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
-
-
-
-Sources:
-https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
-https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
-Data Exploration - Model selection:
-https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
-Data Science from Scratch
-Machine learning with python
-Feature Egnineering
-https://github.com/Punchyou/blog-binary-classification-metrics
-https://www.youtube.com/watch?v=aXpsCyXXMJE
-Models Evaluation:
-    * https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
-    * https://neptune.ai/blog/evaluation-metrics-binary-classification
-Hyperparameters Tuning:
-    * https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
-    * https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
-Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
-"""
