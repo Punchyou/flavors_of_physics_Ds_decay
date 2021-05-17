@@ -3,6 +3,89 @@ import numpy as np
 import seaborn as sns
 from sklearn.model_selection import learning_curve
 import pandas as pd
+import mypy
+from scipy.stats import kstest
+from sklearn.metrics import (accuracy_score, 
+                             confusion_matrix, f1_score,
+                             plot_precision_recall_curve, precision_score,
+                             recall_score)
+
+
+# performance metrics funcs
+def false_negative_rate(tp: float, fn: float) -> float:
+    # flase negative rate, type 2 error - When we don’t predict something when it is, we are contributing to the false negative rate
+    # we want this to be close to 0
+    return fn / (tp + fn)
+
+
+def negative_predictive_value(tn: float, fn: float) -> float:
+    # Negative Predictive Value - measures how many predictions out of all negative
+    # predictions were correct
+    # we want this to be close to 1
+    return tn / (tn + fn)
+
+
+def false_positive_rate(fp: float, tn: float) -> float:
+    # false positive rate, type 1 error - When we predict something when it isn’t we are contributing to the false positive rate
+    # we want this to be close to 0
+    return fp / (fp + tn)
+
+
+def true_negative_rate(tn: float, fp: float) -> float:
+    return tn / (tn + fp)
+
+
+def error_score(y_true: list, y_pred: list):
+    return np.mean(y_pred != y_true)
+
+
+def gather_performance_metrics(
+    y_true: list, y_pred: list, model_col: str
+) -> pd.DataFrame:
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+
+    # false negative rate
+    fnr = false_negative_rate(tp, fn)
+    npv = negative_predictive_value(tn, fn)
+    fpr = false_positive_rate(fp, tn)
+    tnr = true_negative_rate(tn, fp)
+    # true positive rate or sensitivity - how many observations out of all positive
+    # observations have we classified as positive
+    # we want this to be close to 1
+    recall = recall_score(y_true, y_pred)
+
+    # positive predictive value - how many observations predicted as positive are in fact positive.
+    precision = precision_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+
+    # accuracy - how many observations, both positive and negative, were correctly
+    # classified. The problem with this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
+    accuracy = accuracy_score(y_true, y_pred)
+    error = error_score(y_true, y_pred)
+    ks = kstest(y_pred, y_true)[0]
+    return pd.DataFrame(
+        data=[[accuracy, error, ks, fnr, npv, fpr, tnr, recall, precision, f1]],
+        columns=[
+            "Accuracy",
+            "Error",
+            "KS",
+            "FNR",
+            "NPV",
+            "FPR",
+            "TNR",
+            "Recall",
+            "Precision",
+            "F1",
+        ],
+        index=[model_col],
+    )
+
+
+def range_inc(start: float, stop: float, step: float, inc: float=1, dec_pl: int=2):
+    while start < stop:
+        yield round(start, dec_pl)
+        start += step
+        step += start * inc
 
 
 def get_column(df, col_num):
@@ -245,7 +328,7 @@ def plot_learning_curve(estimator, title, X, y, axes=None, ylim=None, cv=None,
 
     return plt
 
-def scatterplot_range_knn_score(scores:  list, from_: int=0, to=10, figsize:
+def scatterplot_range_knn_score(scores: list, from_: int=0, to=10, figsize:
                                    tuple= (10, 6)):
     """
     Plot accuracy or error score of a knn classifier.
@@ -263,7 +346,7 @@ def scatterplot_range_knn_score(scores:  list, from_: int=0, to=10, figsize:
     plt.title('Accuracy vs. K Value')
     plt.xlabel('K')
     plt.ylabel('Accuracy')
-    print("Maximum accuracy:-", max(acc), "at K =", acc.index(max(acc)))
+    print("Maximum accuracy:-", max(scores), "at K =", scores.index(max(scores)))
     return plt
 
 
