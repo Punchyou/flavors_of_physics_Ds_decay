@@ -1,5 +1,5 @@
 import pandas as pd
-import utils
+from utils import subplot_correlation_matrix, plot_heatmap
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
@@ -20,42 +20,41 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score
 import mypy
+import seaborn as sns
 
-# exploration
-# load data
-train_df = pd.read_csv('data/training.csv', index_col='id')
-y = train_df['signal']
-X = train_df.drop('signal', axis=1)
 
-# test_df = pd.read_csv('data/test.csv', index_col='id')
-# 
-# # kepp only common columns in both train and test sets
-# common_cols = np.intersect1d(train_df.columns, test_df.columns)
-# train_df = train_df[common_cols]
-# test_df = test_df[common_cols]
+df = pd.read_csv("data/resampled_data.csv", index_col="Unnamed: 0")
+y = df["signal"]
+X = df.drop("signal", axis=1)
 
+# check distributions
+X.hist(figsize=(60, 35))
+plt.show()
+
+# check if the dataset is balanced
 # check couts of values
-train_df['signal'].value_counts()
-sns.countplot(x = 'signal', data=train_df)
+df['signal'].value_counts() #0: 8205, 1: 8205
+sns.countplot(x = 'signal', data=df)
 plt.show()
 
 # check correlations
-train_df.corr()
-train_df.columns[(train_df.corr()['LifeTime'] > 0.5).values]
+# TODO: plot correlation
+df.corr()
+df.columns[(df.corr()['LifeTime'] > 0.5).values]
 
 # nan values
-len(train_df) - len(train_df.dropna())
+len(df) - len(df.dropna())
 
 # check data types of columns
-train_df.dtypes
+df.dtypes
 
 # describe
-train_df.describe()
+df.describe()
 
-utils.subplot_correlation_matrix(train_df, (30, 30))
+subplot_correlation_matrix(df, (30, 30))
 plt.show()
 
-utils.plot_heatmap(df=train_df, columns=train_df.columns, figsize=(10, 8), annot_fontsize=6)
+plot_heatmap(df=df, columns=df.columns, figsize=(10, 8), annot_fontsize=6)
 plt.show()
 
 # split in X and y
