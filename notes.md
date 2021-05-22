@@ -24,6 +24,19 @@ The dataset provides a good candidate for using a robust scaler transform to sta
 
 How to do the capstonre project report: https://github.com/udacity/machine-learning/blob/master/projects/capstone/capstone_report_template.md
 
+TODO: The dataset has been resampled, due to the amount of the first dataset, only the resampled dataset is present in the project. The code used for resampling is the following:
+```py
+from imblearn.under_sampling import RandomUnderSampler
+undersampler = RandomUnderSampler(random_state=42)
+X_resampled, y_resampled = undersampler.fit_resample(X, y)
+```
+
+. The problem with accuracy this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
+
+
+### learning curves
+"""The first plot is the learning curve
+The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
 
 Sources:
 https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
@@ -42,3 +55,4 @@ Hyperparameters Tuning:
     * https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
     * https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
 Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
+https://www.kaggle.com/nanomathias/bayesian-optimization-of-xgboost-lb-0-9769
