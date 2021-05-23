@@ -46,31 +46,3 @@ def main():
     plot_3pca_components(X=X_rob_scaled, y=y)
     plt.savefig("plot/pca_binary_scatter_3d_plot.png")
 
-
-# The following are not taken into account as final data analysis
-# plot the percentage of variance accounted for by the first n components
-pca = PCA().fit(X_rob_scaled)
-plt.plot(np.cumsum(pca.explained_variance_ratio_))
-plt.xlabel('number of components')
-plt.ylabel('cumulative explained variance')
-
-pca_no_comps_train_model = PCA(n_components=0.95) # 95 percent of variance
-pca_no_comps_train_comps = pca_no_comps_train_model.fit_transform(X_rob_scaled)
-# check the proportion of the data's variance that lies along the axis for each
-# principal component
-components_95per_var = pca_no_comps_train_model.explained_variance_ratio_
-# check how many they are
-len(components_95per_var) # 23 coponents
-
-# check how many complenents describe how much variance for 9 components
-components_95per_var[:9].sum() # 81%
-
-# now create the reansformed training set
-display_component(
-    pca_fitted_model=pca_no_comps_train_model,
-    num_of_components=19,
-    features_list=X.columns,
-    component_number=1,
-    n_weights_to_display=15)
-
-
