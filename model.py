@@ -78,9 +78,7 @@ class BayesSearchCVTuner:
         # Get current parameters and the best parameters
         best_params = pd.Series(self.bayes_cv_tuner.best_params_)
         logging.info(
-            f"|nModel #{len(all_models)}\nBest AUC: \
-            {np.round(self.bayes_cv_tuner.best_score_, 4)}\nBest params:\n \
-            {pformat(dict(self.bayes_cv_tuner.best_params_), sort_dicts=False)}"
+            f"\nModel #{len(all_models)}\nBest AUC:{np.round(self.bayes_cv_tuner.best_score_, 4)}\nBest params:\n{pformat(dict(self.bayes_cv_tuner.best_params_), sort_dicts=False)}"
         )
 
         # Save all model results
@@ -117,8 +115,7 @@ def main():
     y_pred = result.predict(X_test_rob_scaled)
     metrics = gather_performance_metrics(y_test, y_pred, "xgb_bayes_tuned")
     logging.info(
-        f"The model predicted signal events with accuracy \
-            {round(metrics['Accuracy'].values[0], 2)}%"
+        f"The model predicted signal events with accuracy {round(metrics['Accuracy'].values[0], 2)}%"
         )
 
     # save metrics and prediction
@@ -133,11 +130,8 @@ def main():
     plot_learning_curve(
         estimator=result.best_estimator_, X=X_train_rob_scaled, y=y_train, n_jobs=8, title="XGBoost Classifier"
     )
-    plt.show()
     plt.savefig("plots/learning_curve.png")
 
-    """The first plot is the learning curve
-    The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
 if __name__ == "__main__":
     # set up logging
     logging.basicConfig(
