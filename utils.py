@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.stats import kstest
+from sklearn.decomposition import PCA
 from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
                              precision_score, recall_score)
 from sklearn.model_selection import learning_curve
@@ -186,6 +187,7 @@ def get_column(df: pd.DataFrame, col_num: int) -> str:
     return df.columns[col_num]
 
 
+# visualization functions
 def plot_heatmap(
     df: pd.DataFrame,
     columns: list,
@@ -201,8 +203,8 @@ def plot_heatmap(
     annot_fontsize: int = 8,
 ) -> None:
     """
-    Plots a heatmap for columns containing continuous data in a Pandas
-    dataframe and allows for increased appearance control.
+    Plots a Pearson correlation heatmap for columns containing continuous
+    data in a Pandas dataframe and allows for increased appearance control.
     The resulting heatmap is not mirrored. Skips 0 correlations.
 
     Parameters
@@ -256,13 +258,39 @@ def plot_heatmap(
     plt.yticks(size=yticks_fontsize)
 
 
+def plot_3pca_components(X: np.array, y: np.array) -> plt:
+    """
+    3D scatterplot of top 3 pca components.
+
+    Parameters
+    ----------
+    X : np.array
+        array-like features data
+    y : np.array
+        1D array-like target data
+
+    Returns
+    -------
+    plt
+        matplotlib plot
+
+    """
+    pca_train = PCA(n_components=3).fit_transform(X)
+    
+    # 3d scatterplot for components
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter([x[0] for x in pca_train], [y[1] for y in pca_train], [z[2] for z in pca_train], c=y)
+    return plt
+
+
 def display_component(
     pca_fitted_model: object,
     num_of_components: int,
     features_list: list,
     component_number: int,
     n_weights_to_display: int = 10,
-) -> None:
+) -> plt:
     """
     Examine the makeup of each PCA component based on the weightings
     of the original features that are included in the component.
@@ -286,8 +314,7 @@ def display_component(
 
     Returns
     -------
-    None.
-
+    matplotlib plot
     """
     # get index of component (last row - component_num)
     row_idx = num_of_components - component_number
@@ -315,7 +342,7 @@ def display_component(
         data=sorted_weight_data, x="weights", y="features", palette="Blues_d"
     )
     ax.set_title("PCA Component Makeup, Component #" + str(component_number))
-    plt.show()
+    return plt
 
 
 def create_transformed_df(
