@@ -208,7 +208,8 @@ The plots in the second row show the times required by the models to train with 
 
 
 TODO: There are not nan values in the dataset.
-
+TODO: merge o,ages amd plots folder  IN **IMAGES**
+TODO: add feature importance
 
 Sources:
 https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
