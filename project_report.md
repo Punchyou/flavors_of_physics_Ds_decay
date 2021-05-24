@@ -9,9 +9,9 @@
     });
 </script>
 
-# Project Proposal: Flavors of Physics, The Strange D Meson Decay
-
-## Domain Background
+# Project Report: Flavors of Physics, The Strange D Meson Decay
+## Problem Definition
+### Domain Background
 
 
 This project is a particle physics problem. Its name is inspired by what physicists call "[flavor](https://en.wikipedia.org/wiki/Flavour_(particle_physics))", the species of an elementary particle. The  [Standard Model](https://en.wikipedia.org/wiki/Standard_Model) of particle physics is a well-established theory that explains the properties of fundamental particles and their interactions, describing the "flavor" of each particle. As mentioned in Charlotte Louise Mary Wallace CERN [Thesis](https://cds.cern.ch/record/2196092/files/CERN-THESIS-2016-064.pdf), the Standard Model theory has been tested by multiple experiments, but despite its successes, it is still incomplete, and further research is needed. 
@@ -35,13 +35,13 @@ You can see where the meson belongs in the subatomic particles map below. The pu
 Ander Ryd in his [paper](https://wiki.classe.cornell.edu/pub/People/AndersRyd/DHadRMP.pdf) argues that the D meson decays have been a challenge, though scientists have been focused on their decays since the particle discovery. As a result, the existing dataset of this project is sufficient and based on well-studied experiment observations.
 
 
-## Problem Statement
+### Problem Statement
 
 The problem falls into the category of binary classification problems. Based on particle collision events (that cause the $D_s \to φπ$ decays) and their properties, I am challenged to train a machine learning model that predicts whether the decay we are interested in happens in a collision. The model will be trained in the train set of the existing dataset, and it will be evaluated on the testing set.
 
-## Datasets and Inputs
+## TODO: Data Analysis
 
-As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the CERN evaluation process. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
+As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay, and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the CERN evaluation process. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
 
 This is a labeled dataset of 16.410 samples and 46 features, which are described below. The *signal* column classifies the samples into *signal events* (decays happening) denoted with *1* and *background events* (decays not happening) denoted with *0*. The dataset is balanced, with 8.205 signal events and 8.205 background events. 
 
@@ -102,32 +102,30 @@ There are three ways to get the data described above:
 > Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset as, according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary *signal* column. It will not be used in the solution whatsoever.
 
 
-## Solution Statement
+## Algorithms Implementation
 
-This is a binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, is it mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. I intent to train multiple models in combination with different data cleaning methods, but in the final solution, I will only present the chosen data cleaning method and model based on evaluation from different performance metrics, including the KS test.
+This is a binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, is it mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. Also, the KS test should be less than 0.09.
 
-## Benchmark Model
+### Models Exploration
+To solve this problem, I trained a number of binary classifiers, using different hyperparameters tuning methods, in combination with different data scaling methods. For all the different results, a number of performance metrics are gathered in a single table, and the best model is chosen based on the metrics values. The metrics are described in more detail in the *Models Performance* section. As part of the project proposal, I trained a benchmark model presented below.
+
+
+### Benchmark Model
 	
-As a benchmark model, I use a simple k-Nearest Neighbor classifier, trained with the resampled data, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN model with k=52, and highest accuracy of 71%.
+As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN model with k=52, and highest accuracy of 71%.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/knn_benchmark_acc.png" alt="drawing" width="400"/>
 </div>
 
+### Improving the Benchmark Model
+To improve on the benchmark model, I firstly used different data scaling methods. STOPPED HERE: Models: kNN, Support Vector Machines, Stochastic Gradient Descent and XGBoost.
 
-## Evaluation Metrics
+
+## Models Performance
 
 The evaluation metric used to choose the k values of the kNN benchmark model is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide missleading information about the models performance.
 
-## Project Design
-A high-level workflow for the solution approach is the following:
-1. **Understand the problem - identify the problem category**: I already know that this is a binary classification problem, which will help me choose the models to train.
-
-2. **Data mining**: Obtain the necessary datasets for this analysis, as mentioned in the associated section of data input above.
-
-3. **Data Visualization, Cleaning, and Engineering**: Check if the data is balanced, if there is a linear correlation between the features to determine which features to keep, or check if the data will work better with a specific scaling. Distribution plots, or even dimensionality reduction techniques, may help with the data visualization.
-
-4. **Model Training/Tuning**: Train a selection of binary classification algorithms, trying different data scales, different number of features, and cross-validation to avoid overfitting. Make use of search techniques like grid or random search to tune the hyperparameters. Models like Support Vector Machines, Stochastic Gradient Descent, XGBoost, CatBoost, LightGBM or even a custom ensemble classifier might be suitable for this problem.
 
 5. **Model Evaluation**: A number of performance metrics will be used for this step. Evaluation metrics suitable for this problem might be [false positive rate, false negative rate, true negative rate, negative predictive value](https://neptune.ai/blog/evaluation-metrics-binary-classification), accuracy or Kolmogorov–Smirnov test.
 
@@ -137,9 +135,7 @@ A workflow that sums up the steps above is showm below. This workflow is part of
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/project_ds_workflow.png" alt="drawing" width="350"/>
 </div>
 
-
-## Why I chose this project?
-I have a bachelor's degree in physics, but I have not worked as a physicist so far. I started having an interest in data science in recent years, and I am now confident enough to start utilizing my data science knowledge in solving physics problems, combining my passion for both fields. I specifically chose a CERN particle physics project as I know that scientists at CERN often provide data to the public based on their observations. I was able to find both an interesting machine learning problem and a dataset online to work with, with sufficient data for a data science analysis. I initially started working on the tau decay problem, but even simple classifiers predict the signal with high performance without much hyperparameters tuning due to the nature of the dataset. This problem would not help me learn as much as a problem that requires further model improvements to get high-performing results, so I switched to the Ds decay which is a similar problem with lower benchmark performance.
+## Conclusion
 
 
 ## Sources:
