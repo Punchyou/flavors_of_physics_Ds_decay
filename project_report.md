@@ -101,6 +101,7 @@ There are three ways to get the data described above:
 
 > Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset as, according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary *signal* column. It will not be used in the solution whatsoever.
 
+TODO: Add the distribution of data and say they need scaling!!
 
 ## Algorithms Implementation
 
@@ -119,7 +120,45 @@ As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid sea
 </div>
 
 ### Improving the Benchmark Model
-To improve on the benchmark model, I firstly used different data scaling methods. STOPPED HERE: Models: kNN, Support Vector Machines, Stochastic Gradient Descent and XGBoost.
+To improve on the benchmark model, I trained a number of different binary classifiers. 
+
+Scaling of a dataset is a requirement for most machine learning estimators in this project, as the data might behave badly if the individual features do not more or less look like standard normally distributed data (e.g. Gaussian with 0 mean and unit variance).
+
+For instance many elements used in the objective function of a learning algorithm (such as Support Vector Machines presented below) assume that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
+
+The scaling methods used are:
+* `sklearn`'s [Standard Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html): 
+
+$$z = (x - u) / s$$
+
+where $u$ is the mean of the training samples or zero if `mean=False`, and $s$ is the standard deviation of the training samples or one if `std=False`.
+
+Centering and scaling happen independently on each feature by computing the relevant statistics on the samples in the training set. Mean and standard deviation are then stored to be used on later data using transform.
+
+* Minmax Scaling:
+Transform features by scaling each feature to a given range
+This estimator scales and translates each feature individually such that it is in the given range on the training set, e.g. between zero and one.
+
+The transformation is given by:
+$$X_{scaled} = X_{std} * (max - min) + min$$
+where min, max is the features range
+
+* Robust Scaling.
+Scale features using statistics that are robust to outliers.
+
+This Scaler removes the median and scales the data according to the quantile range (defaults to IQR: Interquartile Range). The IQR is the range between the 1st quartile (25th quantile) and the 3rd quartile (75th quantile).
+
+Centering and scaling happen independently on each feature by computing the relevant statistics on the samples in the training set. Median and interquartile range are then stored to be used on later data using the transform method.
+
+Standardization of a dataset is a common requirement for many machine learning estimators. Typically this is done by removing the mean and scaling to unit variance. However, outliers can often influence the sample mean / variance in a negative way. In such cases, the median and the interquartile range often give better results.
+
+The Models trained fir this project are:
+* kNN
+* Support Vector Machines
+* Stochastic Gradient Descent
+* XGBoost with Bayes optimization
+* XGBoost with Bayes optimization - second version
+ 
 
 
 ## Models Performance
