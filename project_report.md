@@ -112,7 +112,9 @@ To solve this problem, I trained a number of binary classifiers, using different
 
 
 ### Benchmark Model
-	
+
+TODO: add details about how the kNN works
+
 As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN model with k=52, and highest accuracy of 71%.
 
 <div align="center">
@@ -120,42 +122,39 @@ As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid sea
 </div>
 
 ### Improving the Benchmark Model
-To improve on the benchmark model, I trained a number of different binary classifiers. 
+To improve on the benchmark model, I trained a number of different binary classifiers and compared their performance. I have also scaled the data in different ways. Scaling of the input data is a requirement for most machine learning estimators in this project, as the data might behave badly when individual features do not are not normally distributed (see the distribution of the features plots above). An example is a Support Vector Machines model (presented below) which assumes that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
 
-Scaling of a dataset is a requirement for most machine learning estimators in this project, as the data might behave badly if the individual features do not more or less look like standard normally distributed data (e.g. Gaussian with 0 mean and unit variance).
+All scaled methods were used in combination with all the models. Also, different methods of hyperparameter tuning were used for each model.
 
-For instance many elements used in the objective function of a learning algorithm (such as Support Vector Machines presented below) assume that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
-
-The scaling methods used are:
+##### Scaling methods used
 * `sklearn`'s [Standard Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html): 
 
 $$z = (x - u) / s$$
 
 where $u$ is the mean of the training samples or zero if `mean=False`, and $s$ is the standard deviation of the training samples or one if `std=False`.
 
-Centering and scaling happen independently on each feature by computing the relevant statistics on the samples in the training set. Mean and standard deviation are then stored to be used on later data using transform.
+* `sklearn`'s [Minmax Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html):
 
-* Minmax Scaling:
-Transform features by scaling each feature to a given range
-This estimator scales and translates each feature individually such that it is in the given range on the training set, e.g. between zero and one.
-
-The transformation is given by:
 $$X_{scaled} = X_{std} * (max - min) + min$$
 where min, max is the features range
 
-* Robust Scaling.
-Scale features using statistics that are robust to outliers.
+This estimator scales and translates each feature individually such that it is in the given range on the training, zero and one in this case.
 
-This Scaler removes the median and scales the data according to the quantile range (defaults to IQR: Interquartile Range). The IQR is the range between the 1st quartile (25th quantile) and the 3rd quartile (75th quantile).
+* `sklearn`'s [Robust Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html):
 
-Centering and scaling happen independently on each feature by computing the relevant statistics on the samples in the training set. Median and interquartile range are then stored to be used on later data using the transform method.
+Scale features using statistics that are robust to outliers. This Scaler removes the median and scales the data according to the quantile range.
+ß
+##### Binary Classifiers trained
+The performance metrics are presented and compared at the end of this section for all the models, and all the different scaling methods.
 
-Standardization of a dataset is a common requirement for many machine learning estimators. Typically this is done by removing the mean and scaling to unit variance. However, outliers can often influence the sample mean / variance in a negative way. In such cases, the median and the interquartile range often give better results.
+The models used are:
+* kNN, tuned with the Grid Search Method
+The details of the kNN model are explained in the benchmark model section. For this model the [Grid Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) method for hyperparameter tuning was used, with the ranges of parameters from 0 to 60.
 
-The Models trained fir this project are:
-* kNN
-* Support Vector Machines
-* Stochastic Gradient Descent
+STOPPED HERE
+
+* Support Vector Machines, tuned with the Random Search
+* Stochastic Gradient Descent, tuned
 * XGBoost with Bayes optimization
 * XGBoost with Bayes optimization - second version
  
@@ -264,3 +263,6 @@ Hyperparameters Tuning:
     * https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
 Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
 https://www.kaggle.com/nanomathias/bayesian-optimization-of-xgboost-lb-0-9769
+
+Scaling
+https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
