@@ -91,10 +91,11 @@ def true_negative_rate(tn: float, fp: float) -> float:
 
 
 def gather_performance_metrics(
-    y_true: list, y_pred: list, model_name: str
+    y_true: list, y_pred: list, model_name: str, best_params: dict
 ) -> pd.DataFrame:
     """
-    Calculates and gathers different metrics to a single pandas dataframe.
+    Calculates and gathers different metrics to a single pandas dataframe,
+    along with the best parameters of the model.
     The metrics are:
         * Accuracy
         * KS (Kolmogorov–Smirnov test)
@@ -111,7 +112,7 @@ def gather_performance_metrics(
         the true values of y
     y_pred : list
         the predicted y values
-    model_col : str
+    model_name : str
         the name of the model to be used as the index
 
     Returns
@@ -143,7 +144,7 @@ def gather_performance_metrics(
     accuracy = accuracy_score(y_true, y_pred)
     ks = kstest(y_pred, y_true)[0]
     return pd.DataFrame(
-        data=[[accuracy, ks, fnr, fpr, tnr, recall, precision, f1]],
+        data=[[accuracy, ks, fnr, fpr, tnr, recall, precision, f1, best_params]],
         columns=[
             "Accuracy",
             "KS",
@@ -153,6 +154,7 @@ def gather_performance_metrics(
             "Recall",
             "Precision",
             "F1",
+            "Best Parameters"
         ],
         index=[model_name],
     )
