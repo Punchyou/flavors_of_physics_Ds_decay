@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import RobustScaler, StandardScaler
 from utils import gather_performance_metrics, plot_learning_curve
 from skopt import BayesSearchCV
 from sklearn.model_selection import StratifiedKFold
@@ -103,17 +103,17 @@ def main():
     )
 
     # scale the data
-    rob_scaler = RobustScaler()
-    X_train_rob_scaled = rob_scaler.fit_transform(X_train)
-    X_test_rob_scaled = rob_scaler.fit_transform(X_test)
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.fit_transform(X_test)
 
     # tune and fit
-    bayes_tuner = BayesSearchCVTuner(X_train_rob_scaled, y_train)
+    bayes_tuner = BayesSearchCVTuner(X_train_scaled, y_train)
     result = bayes_tuner.fit()
 
     # predict
-    y_pred = result.predict(X_test_rob_scaled)
-    metrics = gather_performance_metrics(y_test, y_pred, "xgb_bayes_tuned")
+    y_pred = result.predict(X_test_scaled)
+    metrics = gather_performance_metrics(y_test, y_pred, "xgb_bayes_tuned", best_params=dict(bayes_tuner.bayes_cv_tuner.best_params_))
     logging.info(
         f"The model predicted signal events with accuracy {round(metrics['Accuracy'].values[0], 2)}%"
         )
@@ -128,7 +128,7 @@ def main():
     # check if the model suffers from bias
     # plot the learning curve
     plot_learning_curve(
-        estimator=result.best_estimator_, X=X_train_rob_scaled, y=y_train, n_jobs=8, title="XGBoost Classifier"
+        estimator=result.best_estimator_, X=X_train_scaled, y=y_train, n_jobs=8, title="XGBoost Classifier"
     )
     plt.savefig("plots/learning_curve.png")
 

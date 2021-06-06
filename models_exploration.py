@@ -1,7 +1,6 @@
 import mypy
 import numpy as np
 import pandas as pd
-from bayes_opt import BayesianOptimization
 from sklearn import svm
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import (GridSearchCV, RandomizedSearchCV,
@@ -9,6 +8,7 @@ from sklearn.model_selection import (GridSearchCV, RandomizedSearchCV,
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from skopt import BayesSearchCV
+from bayes_opt import BayesianOptimization
 from xgboost import DMatrix as xgb_dmatrix
 from xgboost import XGBClassifier
 from xgboost import cv as xgb_cv
@@ -54,17 +54,19 @@ def main():
         knn_clf = KNeighborsClassifier()
         # make use of grid search as is relatively fast for knn
         knn_rs_cv = GridSearchCV(
-            estimator=knn_clf, param_grid={"n_neighbors": range(1, 60)}
+            estimator=knn_clf, param_grid={"n_neighbors": range(1, 60)},
+            scoring="accuracy"
         )
         knn_rs_cv.fit(X=X_train, y=y_train)
         knn_prediction = knn_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=knn_prediction, model_col=f"knn_{scale}"
+                y_true=y_test, y_pred=knn_prediction, model_name=f"knn_{scale}",
+                best_params=knn_rs_cv.best_params_
             )
         )
 
-        # model 2 - SDG: Stohastic Gradient Descient (linear SVM)
+        # model 2 - SDG: Stohastic Gradient Descient
         # minimizes the loss function
         # the regularization term (penalty, for overfitting)
         sgd_clf = SGDClassifier()
@@ -87,11 +89,12 @@ def main():
                 "early_stopping": [True],
                 "random_state": [42],
             },
+            scoring="accuracy"
         )
         sgd_rs_cv.fit(X_train, y_train)
         sgd_prediction = sgd_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
-            gather_performance_metrics(y_test, sgd_prediction, f"sgd_{scale}")
+            gather_performance_metrics(y_true=y_test, y_pred=sgd_prediction, model_name=f"sgd_{scale}", best_params=sgd_rs_cv.best_params_)
         )
 
         # model 3 - support vector machines
@@ -102,18 +105,20 @@ def main():
         svm_rs_cv = RandomizedSearchCV(
             estimator=svm_clf,
             param_distributions={
-                "C": list(range_inc(0.5, 100, 0.9, 1.2)),
+                "C": list(range_inc(0.5, 100, 0.9, 1.2, 1)),
                 "break_ties": [False],
                 "decision_function_shape": ["ovo", "ovr"],
                 "kernel": ["poly", "rbf", "sigmoid"],
                 "random_state": [42],
             },
+                scoring="accuracy"
         )
         svm_rs_cv.fit(X_train, y_train)
         svm_prediction = svm_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=svm_prediction, model_col=f"svm_{scale}"
+                y_true=y_test, y_pred=svm_prediction, model_name=f"svm_{scale}",
+                best_params=svm_rs_cv.best_params_
             )
         )
 
@@ -133,7 +138,7 @@ def main():
         def xgb_evaluate(max_depth, gamma, colsample_bytree):
             params = {
                 "objective": "binary:logistic",
-                "eval_metric": "logloss",
+                "eval_metric": "auc",
                 "learning_rate": 0.1,
                 "max_depth": int(max_depth),
                 "subsample": 0.8,
@@ -145,7 +150,7 @@ def main():
             cv_result = xgb_cv(params=params, dtrain=dtrain, nfold=5)
 
             # Bayesian optimization only knows how to maximize, not minimize, so return the negative RMSE
-            return -1.0 * cv_result["test-logloss-mean"].iloc[-1]
+            return -1.0 * cv_result["test-auc-mean"].iloc[-1]
 
         xgb_bo = BayesianOptimization(
             xgb_evaluate,
@@ -168,12 +173,15 @@ def main():
         max_params_df = pd.DataFrame(max_params, index=["max_params"])
 
         # Train a new model with the best parameters from the search
-        clf = XGBClassifier(**max_params)
-        clf.fit(X_train, y_train)
-        xgb_prediction1 = clf.predict(X_test)
+        xgb_clf1 = XGBClassifier(**max_params)
+        xgb_clf1.fit(X_train, y_train)
+        xgb_prediction1 = xgb_clf1.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_test, xgb_prediction1, f"xgb_bayes_opt_{scale}"
+                t_true=y_test,
+                y_pred=xgb_prediction1,
+                model_name=f"xgb_bayes_opt_{scale}",
+                best_params=max_params
             )
         )
 
@@ -227,10 +235,10 @@ def main():
         xgb_prediction2 = result.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_test, xgb_prediction2, f"xgb_bayes_opt2_{scale}"
+                y_true=y_test, y_pred=xgb_prediction2, model_name=f"xgb_bayes_opt2_{scale}", best_params=bayes_cv_tuner.best_params_
             )
         )
-        metrics_df.to_csv("metrics_results.csv")
+        metrics_df.to_csv("reports/metrics_results.csv")
 
 
 if __name__ == "__main__":
