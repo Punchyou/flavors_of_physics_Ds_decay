@@ -94,26 +94,29 @@ The features of the dataset are described below:
 * SPDhits - Number of hits in the SPD detector.
 * signal - This is the target variable.
 
-### Obtain the dataset
-There are three ways to get the data described above:
-* I recommend downloading the resampled dataset from the Github repo I created for this project. I intend to use this resampled dataset, as the original is heavily imbalanced. The resampled dataset is also smaller and easier to manage, which makes it more suitable for this Udacity project. I made sure that the dataset has sufficient data for my analysis. If you want to get the original dataset, follow the next point.
-* From Kaggle, by downloading the *check_agreement.csv.zip* from [here](https://www.kaggle.com/c/flavours-of-physics/data?select=check_agreement.csv.zip) (this requires a Kaggle account).
-
-> Note that in the resampled dataset, I have dropped the "weights" feature from the original dataset as, according to the [description of the dataset](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test), is the feature used to determine if the decay happens or not based on its value, and is the one used to create the binary *signal* column. It will not be used in the solution whatsoever.
-
+TODO: mention where to find the dataset from the github repo
 TODO: Add the distribution of data and say they need scaling!!
+TODO: add:  "in case the data behave badly when individual features do not are not normally distributed (see the distribution of the features plots above)."
+TODO: "The dataset provides a good candidate for using a robust scaler transform to standardize the data in the presence of skewed distributions and outliers."
+
+TODO: The dataset has been resampled, due to the amount of the first dataset, only the resampled dataset is present in the project. The code used for resampling is the following:
+```py
+from imblearn.under_sampling import RandomUnderSampler
+undersampler = RandomUnderSampler(random_state=42)
+X_resampled, y_resampled = undersampler.fit_resample(X, y)
+```
+
+. The problem with accuracy this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
 
 ## Algorithms Implementation
 
-This is a binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, is it mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. Also, the KS test should be less than 0.09.
+This is a supervised binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, it is mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. Also, the KS test should be less than 0.09.
 
 ### Models Exploration
-To solve this problem, I trained a number of binary classifiers, using different hyperparameters tuning methods, in combination with different data scaling methods. For all the different results, a number of performance metrics are gathered in a single table, and the best model is chosen based on the metrics values. The metrics are described in more detail in the *Models Performance* section. As part of the project proposal, I trained a benchmark model presented below.
+To solve this problem, I trained a number of binary classifiers, using different hyperparameters tuning methods, in combination with different data scaling methods. For all the different results, a number of performance metrics are gathered in a single table, and the best model is chosen based on the metrics values. The metrics are presented in the *Models Performance* section. As part of the project proposal, I trained the benchmark model presented below.
 
 
 ### Benchmark Model
-
-TODO: add details about how the kNN works
 
 As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN model with k=52, and highest accuracy of 71%.
 
@@ -122,7 +125,7 @@ As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid sea
 </div>
 
 ### Improving the Benchmark Model
-To improve on the benchmark model, I trained a number of different binary classifiers and compared their performance. I have also scaled the data in different ways. Scaling of the input data is a requirement for most machine learning estimators in this project, as the data might behave badly when individual features do not are not normally distributed (see the distribution of the features plots above). An example is a Support Vector Machines model (presented below) which assumes that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
+To improve on the benchmark model, I trained a number of different binary classifiers and compared their performance. You can find the script with the modesl exploration [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py). As scaling of the input data is a requirement for most machine learning estimators in this project, I have also scaled the data in different ways. An example is a Support Vector Machines model (mentioned below), which assumes that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
 
 All scaled methods were used in combination with all the models. Also, different methods of hyperparameter tuning were used for each model.
 
@@ -142,36 +145,38 @@ This estimator scales and translates each feature individually such that it is i
 
 * `sklearn`'s [Robust Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html):
 
-Scale features using statistics that are robust to outliers. This Scaler removes the median and scales the data according to the quantile range.
-ß
+Scales features using statistics that are robust to outliers. This Scaler removes the median and scales the data according to the quantile range.
+
 ##### Binary Classifiers trained
 The performance metrics are presented and compared at the end of this section for all the models, and all the different scaling methods.
 
 The models used are:
-* kNN, tuned with the Grid Search Method
-The details of the kNN model are explained in the benchmark model section. For this model the [Grid Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) method for hyperparameter tuning was used, with the ranges of parameters from 0 to 60.
+* [kNN](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html), tuned with the Grid Search Method
+The details of the kNN model are explained in the benchmark model section. For this model, the [Grid Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) method for hyperparameter tuning was used, as grid search for kNN is not computationally expensive due to kNN's single parameter. The range of the n nearest neighbors is from 0 to 60.
+TODO: Add accuracy and best params
+* [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/sgd.html), tuned with [Random Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html) for better performance and speed. SGD work well for both small and large datasets and I used it as an optimization technique for different loss functions. A number of loss functions and regularizations are used in the Random Search (refer to the models exploration [script](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py) for more).
 
-STOPPED HERE
+* [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html), tuned with [Random Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html). Different options of *regularization*, *decision function shape* and *kernel* parameters were used for the SVM Random Search (refer to the models exploration [script](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py) for more).
 
-* Support Vector Machines, tuned with the Random Search
-* Stochastic Gradient Descent, tuned
-* XGBoost with Bayes optimization
-* XGBoost with Bayes optimization - second version
+* [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization for hyper parameters tuningm that uses a fixed number of parameter, sampled from a specified distribution. For XGBoost I tried two different libraries available for Bayes Optimization with a different range of parameters. The first optimization is from [bayes_optimization](https://github.com/fmfn/BayesianOptimization), which maximizes the classifier function (XGBoost in this case) and gives the uses the control of the steps of the bayesian optimization and the steps of the random exploration that can be performed.
+
+* [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization, using [skopt Bayes Search](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html). It works in similar way as the *bayes_optimization*, with a slightly different python implementation. This time I used a wider range of parameters.
  
+TODO: Mention in the performance metrics that the best parameters for XGBoost were chose from auc (not option for accuracy). AUC measures how true positive rate (recall) and false positive rate trade off, so in that sense it is already measuring something else.
+AUC has a different interpretation, and that is that it's also the probability that a randomly chosen positive example is ranked above a randomly chosen negative example, according to the classifier's internal value for the examples.
+
+TODO: add the final model script. + say the if it is ran, a report will be in output
+TODO: project strycture - remove the extra or old plots - check tht all plots are used in this report
 
 
 ## Models Performance
 
-The evaluation metric used to choose the k values of the kNN benchmark model is the `sklearn` accuracy. It is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide missleading information about the models performance.
+I use `sklearn` accuracy as the main performance metric based on which I compare the models, though I am also calculating a number of other metrics in order to have more information about how the models perform, for example in cases like prediction of true positives or negatives. Accuracy is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide misleading information about the models' performance. Note that I also used *accuracy* as the main evaluation metric to choose the best model from the Random Search or the Grid Search methods I used for hyperparameter tuning. In the case of XGBoost, which is optimized with bayesian optimization, accuracy is not a possible option to choose the best parameters for the model, so [AUC](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) was used to decide which is the best parameters for the model, based on the model's capability to distinguish different classes.
 
+All the evaluation metrics that were calculated are: [*Accuracy*](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html), [*Kolmogorov–Smirnov test*](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), [*false positive rate, false negative rate, true negative rate, negative predictive value*](https://neptune.ai/blog/evaluation-metrics-binary-classification), [*Recall, Precision*](https://en.wikipedia.org/wiki/Precision_and_recall), [*F1*](https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/).
 
-5. **Model Evaluation**: A number of performance metrics will be used for this step. Evaluation metrics suitable for this problem might be [false positive rate, false negative rate, true negative rate, negative predictive value](https://neptune.ai/blog/evaluation-metrics-binary-classification), accuracy or Kolmogorov–Smirnov test.
+In the folowing table you can see all the metrics results for all the models, and all the scaling methods used on the data, before they were fed into the models:
 
-A workflow that sums up the steps above is showm below. This workflow is part of a typical data science lifecycle, as presented [here](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/lifecycle).
-
-<div align="center">
-<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/project_ds_workflow.png" alt="drawing" width="350"/>
-</div>
 
 ## Conclusion
 
@@ -196,11 +201,7 @@ A workflow that sums up the steps above is showm below. This workflow is part of
 * http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/
 * https://www.kaggle.com/arthurtok/introduction-to-ensembling-stacking-in-python
 
-Dataset Issues:
-    * High acciracy due to the dataset
-    * Pickec another dataset, but it was imbalanced
-    * Had to make it balances by resampling the dataset
-
+TODO: Had to make it balanced by resampling the dataset
 
 How to choose the best n components for pca:
 * PCA project the data to less dimensions, so we need to scale the data
@@ -211,38 +212,18 @@ This curve quantifies how much of the total, 64-dimensional variance is containe
 
 * From the pca graph, looks like that the data are described from 3 variables.
 
-Why use sklearn pipeline for SGDClassifier?
-Often in ML tasks you need to perform sequence of different transformations (find set of features, generate new features, select only some good features) of raw dataset before applying final estimator. Pipeline gives you a single interface for all 3 steps of transformation and resulting estimator. It encapsulates transformers and predictors inside.
-
-
 From he hist() plot of the training data:
 If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution.
 
-The dataset provides a good candidate for using a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
 
 How to do the capstonre project report: https://github.com/udacity/machine-learning/blob/master/projects/capstone/capstone_report_template.md
-
-TODO: The dataset has been resampled, due to the amount of the first dataset, only the resampled dataset is present in the project. The code used for resampling is the following:
-```py
-from imblearn.under_sampling import RandomUnderSampler
-undersampler = RandomUnderSampler(random_state=42)
-X_resampled, y_resampled = undersampler.fit_resample(X, y)
-```
-
-. The problem with accuracy this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
-
 
 ### learning curves
 """The first plot is the learning curve
 The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
 
-
-"""The first plot is the learning curve
-The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
-
-
 TODO: There are not nan values in the dataset.
-TODO: merge o,ages amd plots folder  IN **IMAGES**
+TODO: merge images and plots folder in **IMAGES**
 TODO: add feature importance
 
 Sources:
@@ -266,3 +247,4 @@ https://www.kaggle.com/nanomathias/bayesian-optimization-of-xgboost-lb-0-9769
 
 Scaling
 https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
+https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
