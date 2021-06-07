@@ -39,13 +39,11 @@ Ander Ryd in his [paper](https://wiki.classe.cornell.edu/pub/People/AndersRyd/DH
 
 The problem falls into the category of binary classification problems. Based on particle collision events (that cause the $D_s \to φπ$ decays) and their properties, I am challenged to train a machine learning model that predicts whether the decay we are interested in happens in a collision. The model will be trained in the train set of the existing dataset, and it will be evaluated on the testing set.
 
-## TODO: Data Analysis
+## Data Exploration
 
 As described in the [flavors of physics](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) project, the $D_s \to φπ$ decay has a very similar topology as the *tau* decay, and their datasets share almost the same features. In the *tau* decay problem, the Ds decay data is used as part of the CERN evaluation process. This dataset will be used as the main dataset of the $D_s \to φπ$ decay problem solution.
 
-This is a labeled dataset of 16.410 samples and 46 features, which are described below. The *signal* column classifies the samples into *signal events* (decays happening) denoted with *1* and *background events* (decays not happening) denoted with *0*. The dataset is balanced, with 8.205 signal events and 8.205 background events. 
-
-The features of the dataset are described below:
+This is a labeled dataset of 16.410 samples and 46 features, which are described below. The *signal* column classifies the samples into *signal events* (decays happening) denoted with *1* and *background events* (decays not happening) denoted with *0*.  The features of the dataset are described below:
 * FlightDistance - Distance between Ds and PV (primary vertex, the original protons collision point).
 * FlightDistanceError - Error on FlightDistance.
 * LifeTime - Life time of Ds candidate.
@@ -94,6 +92,33 @@ The features of the dataset are described below:
 * SPDhits - Number of hits in the SPD detector.
 * signal - This is the target variable.
 
+
+The dataset is balanced, with 8.205 signal events and 8.205 background events. A simple count plot is below:
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/signal_value_counts.png" alt="drawing" width="400"/>
+</div>
+
+To have a better understanding of the data, I used [PCA](https://towardsdatascience.com/understand-your-data-with-principle-component-analysis-pca-and-discover-underlying-patterns-d6cadb020939) to reduce the dimention of the dataset and to be able to visualize in 3 dimentions. The method captures the maximum variance across the features and projects observations onto mutually uncorrelated vectors (components). Still, PCA serves other purposes than dimensionality reduction. It also helps to discover underlying patterns across features. Though it is a common algorithm before implementing clustering algorithms, I only use it here to get an idea of how the data look like in fewer dimensions.
+
+TODO: add pca comments
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/pca_binary_scatter_3d_plot.png" alt="drawing" width="800"/>
+</div>
+
+TODO: add features distributions comments
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_distributions.png" alt="drawing" width="700"/>
+</div>
+
+TODO: add heatmap for correlations
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_correlation_heatmap.png" alt="drawing" width="700"/>
+</div>
+
+
+TODO: add data exploration file: https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data_exploration.py
+
+TODO: There are not nan values in the dataset.
 TODO: mention where to find the dataset from the github repo
 TODO: Add the distribution of data and say they need scaling!!
 TODO: add:  "in case the data behave badly when individual features do not are not normally distributed (see the distribution of the features plots above)."
@@ -107,6 +132,23 @@ X_resampled, y_resampled = undersampler.fit_resample(X, y)
 ```
 
 . The problem with accuracy this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
+
+TODO: "From he hist() plot of the training data:
+If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution. "
+
+TODO: Had to make it balanced by resampling the dataset
+
+How to choose the best n components for pca:
+* PCA project the data to less dimensions, so we need to scale the data
+beforehand.
+
+* A vital part of using PCA in practice is the ability to estimate how many components are needed to describe the data. This can be determined by looking at the cumulative explained variance ratio as a function of the number of components
+This curve quantifies how much of the total, 64-dimensional variance is contained within the first N components.
+
+* From the pca graph, looks like that the data are described from 3 variables.
+
+
+
 
 ## Algorithms Implementation
 
@@ -158,15 +200,13 @@ TODO: Add accuracy and best params
 
 * [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html), tuned with [Random Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html). Different options of *regularization*, *decision function shape* and *kernel* parameters were used for the SVM Random Search (refer to the models exploration [script](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py) for more).
 
-* [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization for hyper parameters tuningm that uses a fixed number of parameter, sampled from a specified distribution. For XGBoost I tried two different libraries available for Bayes Optimization with a different range of parameters. The first optimization is from [bayes_optimization](https://github.com/fmfn/BayesianOptimization), which maximizes the classifier function (XGBoost in this case) and gives the uses the control of the steps of the bayesian optimization and the steps of the random exploration that can be performed.
-
-* [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization, using [skopt Bayes Search](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html). It works in similar way as the *bayes_optimization*, with a slightly different python implementation. This time I used a wider range of parameters.
+* [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization for hyper parameters tuning using [skopt Bayes Search](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html), that uses a fixed number of parameters, sampled from a specified distribution. The first optimization maximizes the classifier function (XGBoost in this case) and gives the uses the control of the steps of the bayesian optimization and the steps of the random exploration that can be performed.
  
 TODO: Mention in the performance metrics that the best parameters for XGBoost were chose from auc (not option for accuracy). AUC measures how true positive rate (recall) and false positive rate trade off, so in that sense it is already measuring something else.
 AUC has a different interpretation, and that is that it's also the probability that a randomly chosen positive example is ranked above a randomly chosen negative example, according to the classifier's internal value for the examples.
 
 TODO: add the final model script. + say the if it is ran, a report will be in output
-TODO: project strycture - remove the extra or old plots - check tht all plots are used in this report
+TODO: project structure - remove the extra or old plots - check tht all plots are used in this report
 
 
 ## Models Performance
@@ -175,11 +215,31 @@ I use `sklearn` accuracy as the main performance metric based on which I compare
 
 All the evaluation metrics that were calculated are: [*Accuracy*](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html), [*Kolmogorov–Smirnov test*](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), [*false positive rate, false negative rate, true negative rate, negative predictive value*](https://neptune.ai/blog/evaluation-metrics-binary-classification), [*Recall, Precision*](https://en.wikipedia.org/wiki/Precision_and_recall), [*F1*](https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/).
 
-In the folowing table you can see all the metrics results for all the models, and all the scaling methods used on the data, before they were fed into the models:
+You can refer to the [metrics results](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/metrics_results.csv) for all the models' metrics, with all the scaling methods used on the data, before they were fed into the models. The following heatmap only shows the accuracy of all the models.
 
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/accuracy_heatmap.png" alt="drawing" width="700"/>
+</div>
 
 ## Conclusion
+ou will collect results about the performance of the models used, visualize significant quantities, and validate/justify these values. Finally, you will construct conclusions about your results, and discuss whether your implementation adequately solves the problem.
 
+TODO: link to the project proposal: https://review.udacity.com/#!/reviews/2935541
+
+#### Learning curves
+Learning curve graphs:
+<div align="center">
+<img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/learning_curve.png" alt="drawing" width="1000"/>
+</div>
+
+TODO: add learning curve plot understanding
+
+"""The first plot is the learning curve
+The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
+
+TODO: Remove plots/
+TODO: merge images and plots folder in **IMAGES**
+TODO: Add a structure of the project in README
 
 ## Sources:
 * https://en.wikipedia.org/wiki/Flavour_(particle_physics)
@@ -200,51 +260,21 @@ In the folowing table you can see all the metrics results for all the models, an
 * https://en.wikipedia.org/wiki/Accuracy_paradox
 * http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/
 * https://www.kaggle.com/arthurtok/introduction-to-ensembling-stacking-in-python
+* https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
+* https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
+* https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
+* https://github.com/Punchyou/blog-binary-classification-metrics
+* https://www.youtube.com/watch?v=aXpsCyXXMJE
+* https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
+* https://neptune.ai/blog/evaluation-metrics-binary-classification
+* https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
+* https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
+* https://machinelearningmastery.com/types-of-classification-in-machine-learning/
+* https://www.kaggle.com/nanomathias/bayesian-optimization-of-xgboost-lb-0-9769
+* https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
+* https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
 
-TODO: Had to make it balanced by resampling the dataset
-
-How to choose the best n components for pca:
-* PCA project the data to less dimensions, so we need to scale the data
-beforehand.
-
-* A vital part of using PCA in practice is the ability to estimate how many components are needed to describe the data. This can be determined by looking at the cumulative explained variance ratio as a function of the number of components
-This curve quantifies how much of the total, 64-dimensional variance is contained within the first N components.
-
-* From the pca graph, looks like that the data are described from 3 variables.
-
-From he hist() plot of the training data:
-If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution.
-
-
-How to do the capstonre project report: https://github.com/udacity/machine-learning/blob/master/projects/capstone/capstone_report_template.md
-
-### learning curves
-"""The first plot is the learning curve
-The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
-
-TODO: There are not nan values in the dataset.
-TODO: merge images and plots folder in **IMAGES**
-TODO: add feature importance
-
-Sources:
-https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html
-https://towardsdatascience.com/how-to-find-the-optimal-value-of-k-in-knn-35d936e554eb
-Data Exploration - Model selection:
-https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
+Books:
 Data Science from Scratch
 Machine learning with python
 Feature Egnineering
-https://github.com/Punchyou/blog-binary-classification-metrics
-https://www.youtube.com/watch?v=aXpsCyXXMJE
-Models Evaluation:
-    * https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
-    * https://neptune.ai/blog/evaluation-metrics-binary-classification
-Hyperparameters Tuning:
-    * https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/
-    * https://towardsdatascience.com/a-guide-to-svm-parameter-tuning-8bfe6b8a452c
-Model Selection: https://machinelearningmastery.com/types-of-classification-in-machine-learning/
-https://www.kaggle.com/nanomathias/bayesian-optimization-of-xgboost-lb-0-9769
-
-Scaling
-https://machinelearningmastery.com/robust-scaler-transforms-for-machine-learning/
-https://machinelearningmastery.com/hyperparameter-optimization-with-random-search-and-grid-search/

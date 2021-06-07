@@ -3,8 +3,12 @@ import numpy as np
 import pandas as pd
 from sklearn import svm
 from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import (GridSearchCV, RandomizedSearchCV,
-                                     StratifiedKFold, train_test_split)
+from sklearn.model_selection import (
+    GridSearchCV,
+    RandomizedSearchCV,
+    StratifiedKFold,
+    train_test_split,
+)
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from skopt import BayesSearchCV
@@ -16,6 +20,7 @@ from xgboost import cv as xgb_cv
 from utils import gather_performance_metrics, range_inc, accuracy_heatmap
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 
 def main():
     # load data
@@ -55,15 +60,18 @@ def main():
         knn_clf = KNeighborsClassifier()
         # make use of grid search as is relatively fast for knn
         knn_rs_cv = GridSearchCV(
-            estimator=knn_clf, param_grid={"n_neighbors": range(1, 60)},
-            scoring="accuracy"
+            estimator=knn_clf,
+            param_grid={"n_neighbors": range(1, 60)},
+            scoring="accuracy",
         )
         knn_rs_cv.fit(X=X_train, y=y_train)
         knn_prediction = knn_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=knn_prediction, model_name=f"knn_{scale}",
-                best_params=knn_rs_cv.best_params_
+                y_true=y_test,
+                y_pred=knn_prediction,
+                model_name=f"knn_{scale}",
+                best_params=knn_rs_cv.best_params_,
             )
         )
 
@@ -90,12 +98,17 @@ def main():
                 "early_stopping": [True],
                 "random_state": [42],
             },
-            scoring="accuracy"
+            scoring="accuracy",
         )
         sgd_rs_cv.fit(X_train, y_train)
         sgd_prediction = sgd_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
-            gather_performance_metrics(y_true=y_test, y_pred=sgd_prediction, model_name=f"sgd_{scale}", best_params=sgd_rs_cv.best_params_)
+            gather_performance_metrics(
+                y_true=y_test,
+                y_pred=sgd_prediction,
+                model_name=f"sgd_{scale}",
+                best_params=sgd_rs_cv.best_params_,
+            )
         )
 
         # model 3 - support vector machines
@@ -112,14 +125,16 @@ def main():
                 "kernel": ["poly", "rbf", "sigmoid"],
                 "random_state": [42],
             },
-                scoring="accuracy"
+            scoring="accuracy",
         )
         svm_rs_cv.fit(X_train, y_train)
         svm_prediction = svm_rs_cv.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=svm_prediction, model_name=f"svm_{scale}",
-                best_params=svm_rs_cv.best_params_
+                y_true=y_test,
+                y_pred=svm_prediction,
+                model_name=f"svm_{scale}",
+                best_params=svm_rs_cv.best_params_,
             )
         )
 
@@ -173,12 +188,16 @@ def main():
         xgb_prediction = result.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=xgb_prediction, model_name=f"xgb_bayes_opt_{scale}", best_params=bayes_cv_tuner.best_params_
+                y_true=y_test,
+                y_pred=xgb_prediction,
+                model_name=f"xgb_bayes_opt_{scale}",
+                best_params=bayes_cv_tuner.best_params_,
             )
         )
     metrics_df.to_csv("reports/metrics_results.csv")
     accuracy_heatmap(df=metrics_df)
-    plt.savefig('images/accuracy_heatmap.png')
+    plt.savefig("images/accuracy_heatmap.png")
+
 
 if __name__ == "__main__":
     main()

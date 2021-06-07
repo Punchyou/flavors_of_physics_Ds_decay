@@ -5,8 +5,13 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import kstest
 from sklearn.decomposition import PCA
-from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
-                             precision_score, recall_score)
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.model_selection import learning_curve
 
 """
@@ -154,15 +159,13 @@ def gather_performance_metrics(
             "Recall",
             "Precision",
             "F1",
-            "Best Parameters"
+            "Best Parameters",
         ],
         index=[model_name],
     )
 
 
-def range_inc(
-    start: float, stop: float, step: float, inc: float = 1, dec_pl: int = 2
-):
+def range_inc(start: float, stop: float, step: float, inc: float = 1, dec_pl: int = 2):
     while start < stop:
         yield round(start, dec_pl)
         start += step
@@ -278,11 +281,16 @@ def plot_3pca_components(X: np.array, y: np.array) -> plt:
 
     """
     pca_train = PCA(n_components=3).fit_transform(X)
-    
+
     # 3d scatterplot for components
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter([x[0] for x in pca_train], [y[1] for y in pca_train], [z[2] for z in pca_train], c=y)
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(
+        [x[0] for x in pca_train],
+        [y[1] for y in pca_train],
+        [z[2] for z in pca_train],
+        c=y,
+    )
     return plt
 
 
@@ -327,16 +335,14 @@ def display_component(
     v_1 = np.squeeze(v_1_row.values)
 
     # match weights to features in counties_scaled dataframe
-    comps = pd.DataFrame(
-        list(zip(v_1, features_list)), columns=["weights", "features"]
-    )
+    comps = pd.DataFrame(list(zip(v_1, features_list)), columns=["weights", "features"])
 
     # we'll want to sort by the largest n_weights
     # weights can be neg/pos and we'll sort by magnitude
     comps["abs_weights"] = comps["weights"].apply(lambda x: np.abs(x))
-    sorted_weight_data = comps.sort_values(
-        "abs_weights", ascending=False
-    ).head(n_weights_to_display)
+    sorted_weight_data = comps.sort_values("abs_weights", ascending=False).head(
+        n_weights_to_display
+    )
 
     # display using seaborn
     ax = plt.subplots(figsize=(10, 6))
@@ -469,7 +475,7 @@ def plot_learning_curve(
         matplolib plot
     """
     if axes is None:
-        _, axes = plt.subplots(1, 3, figsize=(20, 5))
+        _, axes = plt.subplots(1, 3, figsize=(25, 6))
 
     axes[0].set_title(title)
     if ylim is not None:
@@ -513,11 +519,7 @@ def plot_learning_curve(
         train_sizes, train_scores_mean, "o-", color="r", label="Training score"
     )
     axes[0].plot(
-        train_sizes,
-        test_scores_mean,
-        "o-",
-        color="g",
-        label="Cross-validation score",
+        train_sizes, test_scores_mean, "o-", color="g", label="Cross-validation score",
     )
     axes[0].legend(loc="best")
 
@@ -586,7 +588,33 @@ def scatterplot_range_knn_score(
     plt.title("Accuracy vs. K Value")
     plt.xlabel("K")
     plt.ylabel("Accuracy")
-    print(
-        "Maximum accuracy:-", max(scores), "at K =", scores.index(max(scores))
+    print("Maximum accuracy:-", max(scores), "at K =", scores.index(max(scores)))
+    return plt
+
+
+def accuracy_heatmap(df: pd.DataFrame) -> plt:
+    """
+    One line heatmap for Accuracy column of the df dataframe
+
+    Parameters
+    ----------
+    df : pd.DataFrame, with on "Accuracy" column
+
+    Returns
+    -------
+    plt : seaborn heatmap
+
+    """
+    # quick heatmap for accuracy
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sns.heatmap(
+        df[["Accuracy"]].sort_values(by="Accuracy", ascending=False).T,
+        square=True,
+        annot=True,
+        ax=ax,
+        cbar=False,
+        fmt=".1%",
     )
+    plt.yticks(rotation=360)
+    plt.xticks(rotation=60)
     return plt

@@ -25,7 +25,8 @@ def main():
     plt.savefig("images/signal_value_counts.png")
 
     # check distributions
-    X.hist(figsize=(60, 50))
+    X.hist(figsize=(60, 10))
+    plt.tight_layout()
     plt.savefig("images/features_distributions.png")
 
     # check correlations
@@ -34,6 +35,7 @@ def main():
 
     # plot correlation heatmap
     plot_heatmap(df=df, columns=df.columns, figsize=(20, 20), annot_fontsize=6)
+    plt.tight_layout()
     plt.savefig("images/features_correlation_heatmap.png")
 
     # Dimentionality Reduction
