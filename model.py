@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
-from sklearn.preprocessing import RobustScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from utils import gather_performance_metrics, plot_learning_curve
 from skopt import BayesSearchCV
 from sklearn.model_selection import StratifiedKFold
@@ -130,7 +130,7 @@ def main():
     plot_learning_curve(
         estimator=result.best_estimator_, X=X_train_scaled, y=y_train, n_jobs=8, title="XGBoost Classifier"
     )
-    plt.savefig("plots/learning_curve.png")
+    plt.savefig("images/learning_curve.png")
 
 if __name__ == "__main__":
     # set up logging
