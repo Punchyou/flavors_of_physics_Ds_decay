@@ -13,8 +13,9 @@ from xgboost import DMatrix as xgb_dmatrix
 from xgboost import XGBClassifier
 from xgboost import cv as xgb_cv
 
-from utils import gather_performance_metrics, range_inc
-
+from utils import gather_performance_metrics, range_inc, accuracy_heatmap
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def main():
     # load data
@@ -122,70 +123,7 @@ def main():
             )
         )
 
-        # model 4 - XGBoost Classifieer
-        param_bounds = {
-            "n_estimators": (0, 1000),
-            "max_depth": (3, 10),
-            "learning_rate": (0.1, 0.8),
-            "gamma": (0, 100),
-            "min_child_weight": (1, 1000),
-            "max_delta_step": (0, 10),
-            "reg_alpha": (0, 3),
-            "reg_lambda": (1, 4),
-        }
-        dtrain = xgb_dmatrix(X_train, label=y_train)
-
-        def xgb_evaluate(max_depth, gamma, colsample_bytree):
-            params = {
-                "objective": "binary:logistic",
-                "eval_metric": "auc",
-                "learning_rate": 0.1,
-                "max_depth": int(max_depth),
-                "subsample": 0.8,
-                "gamma": gamma,
-                "colsample_bytree": colsample_bytree,
-                "random_state": 42,
-            }
-            # Used around 1000 boosting rounds in the full model
-            cv_result = xgb_cv(params=params, dtrain=dtrain, nfold=5)
-
-            # Bayesian optimization only knows how to maximize, not minimize, so return the negative RMSE
-            return -1.0 * cv_result["test-auc-mean"].iloc[-1]
-
-        xgb_bo = BayesianOptimization(
-            xgb_evaluate,
-            {
-                "max_depth": (3, 7),
-                "gamma": (0, 1),
-                "colsample_bytree": (0.3, 0.8),
-            },
-            random_state=(42),
-        )
-        xgb_bo.maximize(init_points=3, n_iter=5, acq="ei", random_state=42)
-
-        bo_res = pd.DataFrame(xgb_bo.res)
-        max_params = bo_res.loc[
-            bo_res["target"] == bo_res["target"].max(), "params"
-        ].values[0]
-        max_params["max_depth"] = int(max_params["max_depth"])
-        max_params["objective"] = "binary:logistic"
-        max_params["random_state"] = 42
-        max_params_df = pd.DataFrame(max_params, index=["max_params"])
-
-        # Train a new model with the best parameters from the search
-        xgb_clf1 = XGBClassifier(**max_params)
-        xgb_clf1.fit(X_train, y_train)
-        xgb_prediction1 = xgb_clf1.predict(X_test)
-        metrics_df = metrics_df.append(
-            gather_performance_metrics(
-                t_true=y_test,
-                y_pred=xgb_prediction1,
-                model_name=f"xgb_bayes_opt_{scale}",
-                best_params=max_params
-            )
-        )
-
-        # model 5 - second way of optimizing + cv
+        # model 4 - bayessian optimization + cv
         bayes_cv_tuner = BayesSearchCV(
             estimator=XGBClassifier(
                 n_jobs=1,
@@ -232,14 +170,15 @@ def main():
             )
 
         result = bayes_cv_tuner.fit(X_train, y_train, callback=status_print)
-        xgb_prediction2 = result.predict(X_test)
+        xgb_prediction = result.predict(X_test)
         metrics_df = metrics_df.append(
             gather_performance_metrics(
-                y_true=y_test, y_pred=xgb_prediction2, model_name=f"xgb_bayes_opt2_{scale}", best_params=bayes_cv_tuner.best_params_
+                y_true=y_test, y_pred=xgb_prediction, model_name=f"xgb_bayes_opt_{scale}", best_params=bayes_cv_tuner.best_params_
             )
         )
-        metrics_df.to_csv("reports/metrics_results.csv")
-
+    metrics_df.to_csv("reports/metrics_results.csv")
+    accuracy_heatmap(df=metrics_df)
+    plt.savefig('images/accuracy_heatmap.png')
 
 if __name__ == "__main__":
     main()
