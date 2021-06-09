@@ -92,12 +92,12 @@ This is a labeled dataset of 16.410 samples and 46 features, which are described
 * SPDhits - Number of hits in the SPD detector.
 * signal - This is the target variable.
 
-The dataset is balanced, with 8.205 signal events and 8.205 background events. A simple count plot is below:
+The dataset is balanced, with 8.205 signal events and 8.205 background events, with no missing values. A simple count plot is below:
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/signal_value_counts.png" alt="drawing" width="400"/>
 </div>
 
-To have a better understanding of the data, I used [PCA](https://towardsdatascience.com/understand-your-data-with-principle-component-analysis-pca-and-discover-underlying-patterns-d6cadb020939) to reduce the dimentions of the dataset and to be able to visualize them in 3 dimentions. PCA method captures the maximum variance across the features and projects observations onto mutually uncorrelated vectors (components). Although it is used for dimensionality reduction, it also helps to discover underlying patterns across features. It is a common algorithm dimentionality reduction before implementing clustering algorithms, but I use it here to get an idea of how the data look like in fewer dimensions. The PCA plot of the data follows.
+To have a better understanding of the data, I used [PCA](https://towardsdatascience.com/understand-your-data-with-principle-component-analysis-pca-and-discover-underlying-patterns-d6cadb020939) to reduce the dimentions of the dataset and to be able to visualize them in 3 dimentions. PCA method captures the maximum variance across the features and projects observations onto mutually uncorrelated vectors (components). Although it is used for dimensionality reduction, it also helps to discover underlying patterns across features. It is a common algorithm dimentionality reduction before implementing clustering algorithms, but I use it here to get an idea of how the data look like in fewer dimensions. As PCA projects the data to less dimensions, I had to scale the data beforehand with a standard scaler.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/pca_binary_scatter_3d_plot.png" alt="drawing" width="800"/>
@@ -105,49 +105,28 @@ To have a better understanding of the data, I used [PCA](https://towardsdatascie
 
 My intention for this plot was to see if I can clearly spot two seperate blobs of data, so a clear seperation between the signal and background events. However, this is something that is visible for this plot 3D plot.
 
-To take a loser look the features, I plotted the distribution of each attribute by discretization the values into buckets and review the frequency in each bucket as histograms. Most of the features are not normally distributed, so the dataset provides a good candidate for scaling the data, for example with a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
+To take a closer look the features, I plotted the distribution of each attribute. Most variables have a skewed distribution, so the dataset provides a good candidate for scaling the data, for example with a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_distributions.png" alt="drawing" width="700"/>
 </div>
 
-The following heatmap shows how linearly correlated the features are. The annotated numbers show the Pearson correlation coefficients. This is a common method intended to reduce the number of input variables to those that are believed to be most useful to a model in order to predict the target variable. Pearson correlation assumes a Gaussian probability distribution to the observations and a linear relationship, so I have scaled the data with a robust scaler transform before calculating the correlations between the features. The highest coefficients are below 0.9, so the feature are not perfectly correlated with each other.
+The following heatmap shows how linearly correlated the features are. The annotated numbers show the [Pearson correlation coefficients](https://medium.com/analytics-vidhya/feature-selection-techniques-2614b3b7efcd). This is a common method intended to reduce the number of input variables to those that are believed to be most useful to a model in order to predict the target variable. Pearson correlation assumes a Gaussian probability distribution to the observations and a linear relationship, so I have scaled the data with a robust scaler transform before calculating the correlations between the features. The highest coefficients are below 0.9, and over 0.8 for 4 features, so I decided to include all featrues in the training dataset.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_correlation_heatmap.png" alt="drawing" width="700"/>
 </div>
 
-TODO: There are not nan values in the dataset.
-TODO: mention where to find the dataset from the github repo
-TODO: Add the distribution of data and say they need scaling!!
-TODO: add:  "in case the data behave badly when individual features do not are not normally distributed (see the distribution of the features plots above)."
+> *All the plots in this section are generated by executing the [data_exploration](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data_exploration.py) python file. The dataset described can be founf [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data/resampled_data.csv).* 
 
-TODO: The dataset has been resampled, due to the amount of the first dataset, only the resampled dataset is present in the project. The code used for resampling is the following:
+Note that the dataset has been resampled, as the initial dataset was imbalanced and  to the size of the first dataset. You can refer to the [project proposal](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/proposal.md#obtain-the-dataset) for more information. The resampling technique use is the following:
 ```py
 from imblearn.under_sampling import RandomUnderSampler
 undersampler = RandomUnderSampler(random_state=42)
 X_resampled, y_resampled = undersampler.fit_resample(X, y)
 ```
 
-. The problem with accuracy this metric is that when problems are imbalanced it is easy to get a high accuracy score by simply classifying all observations as the majority class
-
-TODO: "From he hist() plot of the training data:
-If we ignore the clutter of the plots and focus on the histograms themselves, we can see that many variables have a skewed distribution. "
-
-TODO: Had to make it balanced by resampling the dataset
-
-How to choose the best n components for pca:
-* PCA project the data to less dimensions, so we need to scale the data
-beforehand.
-
-* A vital part of using PCA in practice is the ability to estimate how many components are needed to describe the data. This can be determined by looking at the cumulative explained variance ratio as a function of the number of components
-This curve quantifies how much of the total, 64-dimensional variance is contained within the first N components.
-
-* From the pca graph, looks like that the data are described from 3 variables.
-
-
-
-> *All the plots in this section are generated by executing the [data_exploration](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/data_exploration.py) python file.*
+From the analysis above it is clear that the data need to be scaled before they are fed to the ML models.
 ## Algorithms Implementation
 
 This is a supervised binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, it is mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. Also, the KS test should be less than 0.09.
@@ -188,32 +167,33 @@ This estimator scales and translates each feature individually such that it is i
 Scales features using statistics that are robust to outliers. This Scaler removes the median and scales the data according to the quantile range.
 
 ##### Binary Classifiers trained
-The performance metrics are presented and compared at the end of this section for all the models, and all the different scaling methods.
+
+The script that implement the following models can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py), where you can see the ranges of parameters used for hyperparameters tuning in more detail.
 
 The models used are:
+
 * [kNN](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html), tuned with the Grid Search Method
 The details of the kNN model are explained in the benchmark model section. For this model, the [Grid Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) method for hyperparameter tuning was used, as grid search for kNN is not computationally expensive due to kNN's single parameter. The range of the n nearest neighbors is from 0 to 60.
-TODO: Add accuracy and best params
+
 * [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/sgd.html), tuned with [Random Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html) for better performance and speed. SGD work well for both small and large datasets and I used it as an optimization technique for different loss functions. A number of loss functions and regularizations are used in the Random Search (refer to the models exploration [script](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py) for more).
 
 * [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html), tuned with [Random Search](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html). Different options of *regularization*, *decision function shape* and *kernel* parameters were used for the SVM Random Search (refer to the models exploration [script](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py) for more).
 
 * [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization for hyper parameters tuning using [skopt Bayes Search](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html), that uses a fixed number of parameters, sampled from a specified distribution. The first optimization maximizes the classifier function (XGBoost in this case) and gives the uses the control of the steps of the bayesian optimization and the steps of the random exploration that can be performed.
  
-TODO: Mention in the performance metrics that the best parameters for XGBoost were chose from auc (not option for accuracy). AUC measures how true positive rate (recall) and false positive rate trade off, so in that sense it is already measuring something else.
-AUC has a different interpretation, and that is that it's also the probability that a randomly chosen positive example is ranked above a randomly chosen negative example, according to the classifier's internal value for the examples.
-
-TODO: add the final model script. + say the if it is ran, a report will be in output
-TODO: project structure - remove the extra or old plots - check tht all plots are used in this report
-
+The XGBoost model is the one I chose to predict the test set. A seperate script that implements XGBoost and returns the [predicted *signal* values](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/signal_final_prediction.csv) can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/model.py).
 
 ## Models Performance
 
-I use `sklearn` accuracy as the main performance metric based on which I compare the models, though I am also calculating a number of other metrics in order to have more information about how the models perform, for example in cases like prediction of true positives or negatives. Accuracy is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide misleading information about the models' performance. Note that I also used *accuracy* as the main evaluation metric to choose the best model from the Random Search or the Grid Search methods I used for hyperparameter tuning. In the case of XGBoost, which is optimized with bayesian optimization, accuracy is not a possible option to choose the best parameters for the model, so [AUC](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) was used to decide which is the best parameters for the model, based on the model's capability to distinguish different classes.
+I use `sklearn` accuracy as the main performance metric based on which I compare the models. I am also calculating a number of other metrics in order to have more information about how the models perform, for example in cases like prediction of true positives or negatives. Accuracy is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide misleading information about the models' performance. Note that I also used *accuracy* as the main evaluation metric to choose the best model from the Random Search or the Grid Search methods I used for hyperparameter tuning. In the case of XGBoost, which is optimized with bayesian optimization, accuracy is not a possible option to choose the best parameters for the model, so [AUC](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) was used to decide which is the best parameters for the model, based on the model's capability to distinguish different classes.
 
 All the evaluation metrics that were calculated are: [*Accuracy*](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html), [*Kolmogorov–Smirnov test*](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), [*false positive rate, false negative rate, true negative rate, negative predictive value*](https://neptune.ai/blog/evaluation-metrics-binary-classification), [*Recall, Precision*](https://en.wikipedia.org/wiki/Precision_and_recall), [*F1*](https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/).
 
 You can refer to the [metrics results](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/metrics_results.csv) for all the models' metrics, with all the scaling methods used on the data, before they were fed into the models. The following heatmap only shows the accuracy of all the models.
+
+Highest accuracy (0.867764), lowest KS (0.004266), highest precision (0.865141), Highest TNR (0.862997)
+
++ comparison with the benchmark model
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/accuracy_heatmap.png" alt="drawing" width="700"/>
@@ -235,9 +215,10 @@ TODO: add learning curve plot understanding
 """The first plot is the learning curve
 The plots in the second row show the times required by the models to train with various sizes of training dataset. The plots in the third row show how much time was required to train the models for each training sizes."""
 
-TODO: Remove plots/
-TODO: merge images and plots folder in **IMAGES**
 TODO: Add a structure of the project in README
+#### TODO Further improvements:
+* Improve feature selection
+* Use model stacking
 
 ## Sources:
 * https://en.wikipedia.org/wiki/Flavour_(particle_physics)
