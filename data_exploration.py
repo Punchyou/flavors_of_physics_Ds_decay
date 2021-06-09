@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import mypy
 import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 
 from utils import plot_3pca_components, plot_heatmap
 
@@ -16,7 +16,7 @@ def main():
     len(df) - len(df.dropna())
 
     # check data types of columns
-    df.dtypes
+    print(df.dtypes)
 
     # check if the dataset is balanced
     # check couts of values
@@ -31,10 +31,13 @@ def main():
 
     # check correlations
     # describe
-    df.describe()
+    print(df.describe())
 
     # plot correlation heatmap
-    plot_heatmap(df=df, columns=df.columns, figsize=(20, 20), annot_fontsize=6)
+    scaler = RobustScaler()
+    df_scaled = scaler.fit_transform(df)
+    df_scaled = pd.DataFrame(data=df_scaled, columns=df.columns)
+    plot_heatmap(df=df_scaled, columns=df.columns, figsize=(20, 20), annot_fontsize=6, title="")
     plt.tight_layout()
     plt.savefig("images/features_correlation_heatmap.png")
 
