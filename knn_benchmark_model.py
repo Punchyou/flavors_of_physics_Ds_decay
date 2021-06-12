@@ -3,8 +3,9 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from utils import gather_performance_metrics
 
-df = pd.read_csv("data/resampled_data.csv", index_col="Unnamed: 0")
+df = pd.read_csv("data/resampled_data.csv")
 X = df.drop("signal", axis=1)
 y = df["signal"]
 X_train, X_test, y_train, y_test = train_test_split(
@@ -38,6 +39,6 @@ plt.ylabel("Accuracy")
 plt.text(
     from_ + 1,
     max(acc),
-    f"Max accuracy: {round(max(acc), 3)},  K = {acc.index(max(acc))}",
+    f"Max accuracy: {round(max(acc), 2)},  K = {acc.index(max(acc))}",
 )
-plt.show()
+plt.savefig('images/knn_benchmark_acc.png')
