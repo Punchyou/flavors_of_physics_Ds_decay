@@ -409,7 +409,7 @@ def plot_learning_curve(
     ylim=None,
     cv=None,
     n_jobs=None,
-    train_sizes=np.linspace(0.1, 1.0, 5),
+    train_sizes=np.linspace(0.01, 1.0, 5),
 ) -> plt:
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -545,7 +545,7 @@ def plot_learning_curve(
         test_scores_mean + test_scores_std,
         alpha=0.1,
     )
-    axes[2].set_xlabel("fit_times")
+    axes[2].set_xlabel("fit_time")
     axes[2].set_ylabel("Score")
     axes[2].set_title("Performance of the model")
 
