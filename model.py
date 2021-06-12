@@ -5,12 +5,13 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
-from utils import gather_performance_metrics, plot_learning_curve
+from utils import gather_performance_metrics, plot_learning_curve, model_metrics_comparison_heatmap
 from skopt import BayesSearchCV
 from sklearn.model_selection import StratifiedKFold
 import logging
 from pprint import pformat
-
+from sklearn.neighbors import KNeighborsClassifier
+import seaborn as sns
 
 class BayesSearchCVTuner:
     """
@@ -113,13 +114,13 @@ def main():
 
     # predict
     y_pred = result.predict(X_test_scaled)
-    metrics = gather_performance_metrics(y_test, y_pred, "xgb_bayes_tuned", best_params=dict(bayes_tuner.bayes_cv_tuner.best_params_))
+    metrics_df = gather_performance_metrics(y_test, y_pred, "xgb_bayes_tuned", best_params=dict(bayes_tuner.bayes_cv_tuner.best_params_))
     logging.info(
-        f"The model predicted signal events with accuracy {round(metrics['Accuracy'].values[0], 2)}%"
+        f"The model predicted signal events with accuracy {round(metrics_df['Accuracy'].values[0], 2)}%"
         )
 
     # save metrics and prediction
-    metrics.T.to_csv("reports/model_final_metrics.csv")
+    metrics_df.T.to_csv("reports/model_final_metrics.csv")
     prediction = y_test.to_frame()
     prediction['y_pred'] = y_pred
     prediction.to_csv("reports/signal_final_prediction.csv")
@@ -130,7 +131,16 @@ def main():
     plot_learning_curve(
         estimator=result.best_estimator_, X=X_train_scaled, y=y_train, n_jobs=8, title="XGBoost Classifier"
     )
-    plt.savefig("images/learning_curve.png")
+    plt.savefig("images/learning_curve.png", bbox_inches='tight', pad_inches=0.01)
+
+    # comparison with the benchmark model
+    knn = KNeighborsClassifier(n_neighbors=52)
+    knn.fit(X_train, y_train.values)
+    y_pred = knn.predict(X_test)
+    metrics_df = metrics_df.append(gather_performance_metrics(y_test, y_pred, "knn_benchmark", best_params='k=52'))
+    model_metrics_comparison_heatmap(df=metrics_df.drop('Best Parameters', axis=1))
+    plt.savefig("images/comparison_heatmap.png", bbox_inches='tight', pad_inches=0.01)
+
 
 if __name__ == "__main__":
     # set up logging

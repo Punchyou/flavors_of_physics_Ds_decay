@@ -13,6 +13,7 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import learning_curve
+from matplotlib.colors import ListedColormap
 
 """
 This script contains unitility functions that has been used for this project.
@@ -192,8 +193,7 @@ def get_column(df: pd.DataFrame, col_num: int) -> str:
     return df.columns[col_num]
 
 
-# visualization functions
-def plot_heatmap(
+def correlation_heatmap(
     df: pd.DataFrame,
     columns: list,
     vmin: float = -1,
@@ -606,15 +606,37 @@ def accuracy_heatmap(df: pd.DataFrame) -> plt:
 
     """
     # quick heatmap for accuracy
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots()
     sns.heatmap(
         df[["Accuracy"]].sort_values(by="Accuracy", ascending=False).T,
         square=True,
         annot=True,
         ax=ax,
         cbar=False,
-        fmt=".1%",
+        fmt=".1%"
     )
     plt.yticks(rotation=360)
     plt.xticks(rotation=60)
+    plt.tight_layout()
+    return plt
+
+def model_metrics_comparison_heatmap(df: pd.DataFrame) -> plt:
+    """
+    Heatmap for the comparison between the heatmap benchmark and final model.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+
+    Returns
+    -------
+    plt : seaborn heatmap
+
+    """
+    fig, ax = plt.subplots()
+    sns.heatmap(df, square=True, annot=True, cbar=False, fmt=".1%", ax=ax, cmap=ListedColormap(['lightblue']), lw=2
+)
+    plt.yticks(rotation=360)
+    plt.xticks(rotation=60)
+    plt.tight_layout()
     return plt
