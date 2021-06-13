@@ -3,6 +3,7 @@ import mypy
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import ListedColormap
 from scipy.stats import kstest
 from sklearn.decomposition import PCA
 from sklearn.metrics import (
@@ -13,7 +14,6 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import learning_curve
-from matplotlib.colors import ListedColormap
 
 """
 This script contains unitility functions that has been used for this project.
@@ -613,12 +613,13 @@ def accuracy_heatmap(df: pd.DataFrame) -> plt:
         annot=True,
         ax=ax,
         cbar=False,
-        fmt=".1%"
+        fmt=".1%",
     )
     plt.yticks(rotation=360)
     plt.xticks(rotation=60)
     plt.tight_layout()
     return plt
+
 
 def model_metrics_comparison_heatmap(df: pd.DataFrame) -> plt:
     """
@@ -634,8 +635,16 @@ def model_metrics_comparison_heatmap(df: pd.DataFrame) -> plt:
 
     """
     fig, ax = plt.subplots()
-    sns.heatmap(df, square=True, annot=True, cbar=False, fmt=".1%", ax=ax, cmap=ListedColormap(['lightblue']), lw=2
-)
+    sns.heatmap(
+        df,
+        square=True,
+        annot=True,
+        cbar=False,
+        fmt=".1%",
+        ax=ax,
+        cmap=ListedColormap(["lightblue"]),
+        lw=2,
+    )
     plt.yticks(rotation=360)
     plt.xticks(rotation=60)
     plt.tight_layout()

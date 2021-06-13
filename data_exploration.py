@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import mypy
 import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.preprocessing import RobustScaler, StandardScaler
 
-from utils import plot_3pca_components, correlation_heatmap
+from utils import correlation_heatmap, plot_3pca_components
 
 
 def main():
@@ -37,7 +37,9 @@ def main():
     scaler = RobustScaler()
     df_scaled = scaler.fit_transform(df)
     df_scaled = pd.DataFrame(data=df_scaled, columns=df.columns)
-    correlation_heatmap(df=df_scaled, columns=df.columns, figsize=(20, 20), annot_fontsize=6, title="")
+    correlation_heatmap(
+        df=df_scaled, columns=df.columns, figsize=(20, 20), annot_fontsize=6, title=""
+    )
     plt.tight_layout()
     plt.savefig("images/features_correlation_heatmap.png")
 

@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import mypy
 import numpy as np
 import pandas as pd
@@ -12,14 +13,9 @@ from sklearn.model_selection import (
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from skopt import BayesSearchCV
-from bayes_opt import BayesianOptimization
-from xgboost import DMatrix as xgb_dmatrix
 from xgboost import XGBClassifier
-from xgboost import cv as xgb_cv
 
-from utils import gather_performance_metrics, range_inc, accuracy_heatmap
-import matplotlib.pyplot as plt
-import seaborn as sns
+from utils import accuracy_heatmap, gather_performance_metrics, range_inc
 
 
 def main():
