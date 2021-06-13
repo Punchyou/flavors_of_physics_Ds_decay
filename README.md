@@ -42,6 +42,7 @@ The problem falls into the category of binary classification problems. Based on 
 
 
 ## Project Structure
+```sh
 .
 
 ├── `README.md`
@@ -82,6 +83,7 @@ The problem falls into the category of binary classification problems. Based on 
 │   └── signal_final_prediction.csv &larr;
 ├── requirements.txt &larr;
 └── utils.py &larr;
+```
 ## TODO: Clone the project
 TODO: mention that I have commented out the 3d plot
 ## How to execute the files
