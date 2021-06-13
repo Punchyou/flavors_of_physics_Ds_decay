@@ -44,6 +44,7 @@ The problem falls into the category of binary classification problems. Based on 
 ## Project Structure
 .
 ├── `README.md`
+
 ├── `data`
 │   ├── `resampled_data.csv` &larr; *dataset used throught the project* 
 │   └── `resampled_data.csv.zip` &larr; *resample dataset as .zip*
