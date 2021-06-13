@@ -123,10 +123,10 @@ The next step of the data analysis was to take a closer look at the features. A 
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_distributions.png" alt="drawing" width="800"/>
 </div>
 
-Most variables have a skewed distribution, so the dataset provides a good candidate for scaling the data, for example with a robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
+Most variables have a skewed distribution, so the dataset provides a good candidate for scaling the data, for example with the `sklearn`robust scaler transform to standardize the data in the presence of skewed distributions and outliers.
 
 ##### Features Correlation
-The following [heatmap](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/images/features_correlation_heatmap.png) shows how linearly correlated the features are. The annotated numbers show the [Pearson correlation coefficients](https://medium.com/analytics-vidhya/feature-selection-techniques-2614b3b7efcd). This is a common method intended to reduce the number of input variables to those that are believed to be most useful to a model in order to predict the target variable. Pearson correlation assumes a Gaussian probability distribution to the observations and a linear relationship, so the data were scaled with a robust scaler transform before calculating the correlations between the features. The highest coefficients are below 0.9, and over 0.8 for only 4 features, so I decided to include all of them in the training process.
+The following [heatmap](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/images/features_correlation_heatmap.png) shows how linearly correlated the features are. The annotated numbers show the [Pearson correlation coefficients](https://medium.com/analytics-vidhya/feature-selection-techniques-2614b3b7efcd). This is a common method intended to reduce the number of input variables to those that are believed to be most useful to a model in order to predict the target variable. Pearson correlation assumes a Gaussian probability distribution to the observations and a linear relationship, so the data were scaled with the `sklearn` robust scaler transform before calculating the correlations between the features. The highest coefficients are below 0.9, and over 0.8 for only 4 features, so I decided to include all of them in the training process.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/features_correlation_heatmap.png" alt="drawing" width="700"/>
@@ -140,10 +140,10 @@ From the analysis above it is clear that the data need to be scaled before they 
 
 This is a supervised binary classification problem, so the solution will be the output of a binary classifier. There is no constrain in using any classifier in particular for this problem. However, in the [evaluation description](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test) of the Kaggle competition described so far, it is mentioned that the [Kolmogorov–Smirnov (KS)](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) test is used to evaluate the differences between the classifier distribution and the true *signal* values distribution. Also, the KS test should be less than 0.09.
 
-#### Models Exploration
+##### Models Exploration
 To solve this problem, I trained a number of binary classifiers, using different hyperparameters tuning methods for different models, in combination with different data scaling methods. For all the results, a number of performance metrics are gathered in a single table, and the best model is chosen based on the metrics values. More information on the metrics are described in the *Models Performance* section.
 
-#### Benchmark Model
+##### Benchmark Model
 
 As part of the project proposal, I trained the benchmark model. As a benchmark model, I use a simple k-Nearest Neighbor classifier, and grid search for tuning the k hyperparameter. The benchmark model script can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/knn_benchmark_model.py). The execution of that script generates the following plot. The plot shows the accuracy of the kNN model for each one of the k values (from 1 to 80). The best model is the kNN classifier with k=52, and highest accuracy of 71%.
 
@@ -151,7 +151,7 @@ As part of the project proposal, I trained the benchmark model. As a benchmark m
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/knn_benchmark_acc.png" alt="drawing" width="600"/>
 </div>
 
-#### Improving the Benchmark Model
+##### Improving the Benchmark Model
 To improve on the benchmark model, I trained a number of different binary classifiers and compared their performance. You can find the script with the modesl exploration [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/models_exploration.py). As scaling of the input data is a requirement for most machine learning estimators in this project, and a transform that could improve the resulrs as the shown in the data analysis procided above, I have also scaled the data in three different ways. An example of its importance is a Support Vector Machines model (one of the models trained), which assumes that all features are centered around 0 and have variance in the same order. If a feature has a variance that is orders of magnitude larger that others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected. The scaling methods used are: `sklearn`'s [Standard Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html), `sklearn`'s [Minmax Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) and `sklearn`'s [Robust Scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html).
 
 All scaled methods were used in combination with all the models. Also, different methods of hyperparameter tuning were used for each model.
@@ -172,28 +172,32 @@ The details of the kNN model are explained in the benchmark model section. For t
 * [XGBoost](https://xgboost.readthedocs.io/en/latest/index.html) with Bayes optimization. XGBoost is a more complicated algorithm than the ones described so far, and is designed to make the best use of available resources to train the model. Is it an ensemble technique where new models are created that predict the residuals or errors of prior models and then added together to make the final prediction. It uses a gradient descent algorithm to minimize the loss when adding new models. 
 For the hyper parameters tuning, [skopt Bayes Search](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html) was used, that utilizes a fixed number of parameters, sampled from a specified distribution. The first optimization maximizes the classifier function (XGBoost in this case) and gives the user the control of the steps of the bayesian optimization and the steps of the random exploration that can be performed.
  
-The XGBoost model trained with scaled data usind the robust scaler is the one I chose based on the performance metrics analysis presented in the next section. A seperate script that implements XGBoost and returns the [predicted *signal* values](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/signal_final_prediction.csv) can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/model.py). You can also refer to it for the full range of the parameters used for the tuning.
+The XGBoost model trained with scaled data using the robust scaler is the one I chose based on the performance metrics analysis presented in the next section. A seperate script that implements XGBoost and returns the [predicted *signal* values](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/signal_final_prediction.csv) can be found [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/model.py). You can also refer to it for the full range of the parameters used for the tuning.
 
-The best parameters of all the models are saved, along with their corresponding performance metrics calculated. You can find them all [here](TODO: link to metrics df + best parameters)
-## Models Performance
+The best parameters of all the models are saved, along with their corresponding performance metrics calculated. You can find them all [here](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/metrics_results.csv).
 
-According to the original kaggle [problem evaluation instructions]([here](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test).) described in the problem definition section, the KS test would be the metric based on which a model would be assessed against. The KS test value has to be lower than 0.09 for the model to be considered "good enough" to pass. All the models trained (except from the benchmark model) are below 0.09, so I considered more performance metrics to rank the models based on their performance.
+## Models' Performance
+
+According to the original kaggle [problem evaluation instructions]([here](https://www.kaggle.com/c/flavours-of-physics/overview/agreement-test).) described in the problem definition section, the KS test would be the metric based on which the final model would be assessed against. The KS test value has to be lower than 0.09 for the model to be considered "good enough" to pass. All the models trained (except from the benchmark model) are below 0.09, so I considered more performance metrics to rank the models based on their performance.
 
 I use `sklearn` accuracy as the main performance metric based on which I compare the models. I am also calculating a number of other metrics in order to have more information about how the models perform, for example in cases like prediction of true positives or negatives. Accuracy is calculated by dividing the number of correct predictions by the total number of samples. As the dataset is balanced with equal class distribution, the [accuracy paradox](https://en.wikipedia.org/wiki/Accuracy_paradox) is avoided and the metric does not provide misleading information about the models' performance. Note that I also used *accuracy* as the main evaluation metric to choose the best model from the Random Search or the Grid Search methods I used for hyperparameter tuning. In the case of XGBoost, which is optimized with bayesian optimization, accuracy is not a possible option to choose the best performing model, so [AUC](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) was used to decide which is the best parameters, based on the model's capability to distinguish different classes.
 
 All the evaluation metrics that were calculated are: [*accuracy*](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html), [*Kolmogorov–Smirnov test*](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), [*false positive rate, false negative rate, true negative rate, negative predictive value*](https://neptune.ai/blog/evaluation-metrics-binary-classification), [*Recall, Precision*](https://en.wikipedia.org/wiki/Precision_and_recall), [*F1*](https://machinelearningmastery.com/classification-accuracy-is-not-enough-more-performance-measures-you-can-use/).
 
-You can refer to the [metrics results](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/metrics_results.csv) for all the models' metrics values. The results include all the scaling methods used on the data, before they are fed into the models. The following heatmap only shows the accuracy of all the models.
+You can refer to the [metrics results](https://github.com/Punchyou/flavors_of_physics_Ds_decay/blob/master/reports/metrics_results.csv) for all the models' metrics values. The results include all the scaling methods used on the data, before they are fed into the models. The following heatmap only shows the *accuracy* of all the models.
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/Punchyou/flavors_of_physics_Ds_decay/master/images/accuracy_heatmap.png" alt="drawing" width="700"/>
 </div>
 
-The XGBoost model trained with data scaled with the `sklearn` standard scaler has the highest accuracy (0.87) and the lowest KS (0.004). It also has the highest precision (0.87) and highest true negative rate (0.86) of all the models trained, so it is the best model in terms of how well it can predict both true positive and true negative values.
+The XGBoost model trained with data scaled with the `sklearn` standard scaler has the highest accuracy (0.87) and the lowest KS (0.004). It also has the highest precision (0.87) and true negative rate (0.86) of all the models trained, so it is the best model in terms of how well it can predict both true positive and true negative values.
 
 ## Conclusion
 
-The XGBoost model is the model I choose to solve the $D_s \to φπ$ problem. The KS test is below 0.09, so according to the kaggle competition description, is can pass the test for approval. I looked for alternative additional metrics, but I decided to choose the final model based on a simple performance metric, accuracy, since the dataset is balanced and to make sure I also consider the metrics of the best accuracy model that asses true or false positive or nagetive values. The accuracy is 87%, which I believe is good enough for solving this problem, and the model can also predict true positive and negative values well.
+The XGBoost model is the model I choose to solve the $D_s \to φπ$ problem. The KS test is below 0.09, so according to the kaggle competition description, it passes the test for approval. 
+
+STOPPED HERE
+As accuracy, since the dataset is balanced and to make sure I also consider the metrics of the best accuracy model that asses true or false positive or nagetive values. The accuracy is 87%, which I believe is good enough for solving this problem, and the model can also predict true positive and negative values well.
 
 ##### Comparison of models
 A comparison of the XGBoost model with the benchmark model follows.
