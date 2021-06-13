@@ -43,16 +43,25 @@ The problem falls into the category of binary classification problems. Based on 
 
 ## Project Structure
 .
+
 ├── `README.md`
 
 ├── `data`
+
 │   ├── `resampled_data.csv` &larr; *dataset used throught the project* 
+
 │   └── `resampled_data.csv.zip` &larr; *resample dataset as .zip*
+
 ├── `data_exploration.py` &larr; *script for the project data analysis*
+
 ├── `images`
+
 │   ├── `accuracy_heatmap.png` &larr; *accuracy score heatmap for all the models*
+
 │   ├── `comparison_heatmap.png` &larr; *heatmap for all the metrics values between benchmark and final model*
+
 │   ├── `features_correlation_heatmap.png` &larr; *Pearson correlation coefficients between all the features in the dataset*
+
 │   ├── `features_distributions.png` &larr; *histograms for all the features in the dataset*
 │   ├── `knn_benchmark_acc.png` &larr; *accuracy score scatterplot for range of k parameters of kNN*
 │   ├── `learning_curve.png` &larr; *learning curve plot for the final XGBoost model*
