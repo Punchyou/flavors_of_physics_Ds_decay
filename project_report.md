@@ -203,7 +203,7 @@ The XGBoost model trained with data scaled with the `sklearn` standard scaler ha
 
 The XGBoost model is the model I choose to solve the $D_s \to φπ$ problem. The KS test is below 0.09, so according to the kaggle competition description, it passes the test for approval. 
 
-Since the dataset is balanced, it was safe enough to use a simple metrics as accuracy based on which I would pick the right model. I also made sure I consider metrics that asses true or false positive or nagetive values. The accuracy of the XGBoost model chosen is 87%, which I believe is good enough for solving this problem, and the model can also predict true positive and negative values well.
+Since the dataset is balanced, it was safe enough to use a simple metric like accuracy based on which I would pick the right model. I also made sure I consider metrics that assess true or false positive and negative predictions. The accuracy of the XGBoost model chosen is 87%, which I believe is good enough for solving this problem, and the model can also predict true positive and negative values well.
 
 #### Comparison of models
 A comparison of the XGBoost model with the benchmark model follows.
