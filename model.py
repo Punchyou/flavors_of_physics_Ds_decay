@@ -127,7 +127,7 @@ def main():
         best_params=dict(bayes_tuner.bayes_cv_tuner.best_params_),
     )
     logging.info(
-        f"The model predicted signal events with accuracy {round(metrics_df['Accuracy'].values[0], 2)}%"
+        f"The model predicted signal events with accuracy {round(metrics_df['Accuracy'].values[0]* 100)}%"
     )
 
     # save metrics and prediction
