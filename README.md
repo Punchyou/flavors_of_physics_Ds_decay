@@ -108,4 +108,7 @@ python models_exporation.py
 > *This runs all the models and the hyperparameter tuning algorithms, so it will take several minutes to copmlete.*
 
 
-4. Execute the final model and generate the `images/learning_curve.png` and `images/comparison_heatmap.png` for the comparison with the benchmark model, and also the `reports/model_final_metrics.csv` and `reports/signal_final_prediction.csv`.
+4. Execute the final model script and generate the `images/learning_curve.png` and `images/comparison_heatmap.png` for the comparison with the benchmark model, and also the `reports/model_final_metrics.csv` and `reports/signal_final_prediction.csv`.
+```sh
+python model.py
+```
