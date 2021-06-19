@@ -14,7 +14,7 @@ The Standard Model counts six flavors of quarks and six flavors of leptons, as s
 
  The Ds decay project is influenced by a CERN [kaggle competition problem](https://www.kaggle.com/c/flavours-of-physics/overview/description) about the flavors of physics. In the initial problem, scientists try to find if it is possible the τ (*tau*) lepton to [decay](https://en.wikipedia.org/wiki/Particle_decay) (transform into multiple other particles) to three μ (muon) leptons. The problem I chose, however, concerns the [Ds meson](https://en.wikipedia.org/wiki/D_meson) or *strange D meson*, a composite particle that consists of one quark or one antiquark, and how often it decays into a *φ* ([phi meson](https://en.wikipedia.org/wiki/Phi_meson)) and a *π* ([pi meson or pion](https://en.wikipedia.org/wiki/Pion)) based on multiple factors. The decay is described by the following flow:
 
-<div style="text-align:center">
+<div style="text-align:center" colour="blue">
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;D_{s}\to\phi\pi" title=""/>
 </div>
 
