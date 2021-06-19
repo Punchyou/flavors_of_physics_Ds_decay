@@ -410,6 +410,7 @@ def plot_learning_curve(
     cv=None,
     n_jobs=None,
     train_sizes=np.linspace(0.01, 1.0, 5),
+    figsize=(20, 8)
 ) -> plt:
     """
     Generate 3 plots: the test and training learning curve, the training
@@ -475,7 +476,7 @@ def plot_learning_curve(
         matplolib plot
     """
     if axes is None:
-        _, axes = plt.subplots(1, 3, figsize=(25, 6))
+        _, axes = plt.subplots(1, 3, figsize=figsize)
 
     axes[0].set_title(title)
     if ylim is not None:
