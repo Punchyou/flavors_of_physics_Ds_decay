@@ -18,7 +18,7 @@ The Standard Model counts six flavors of quarks and six flavors of leptons, as s
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;D_{s}\to\phi\pi" title=""/>
 </div>
 
-[![equation](https://latex.codecogs.com/svg.latex?\Large&space;D_{s}\to\phi\pi)](www.google.com)
+![formula](https://latex.codecogs.com/svg.latex?\Large&space;D_{s}\to\phi\pi)
 You can see where the meson belongs in the subatomic particles map below. The purple part describes the composite particles.
 
 <div align="center">
