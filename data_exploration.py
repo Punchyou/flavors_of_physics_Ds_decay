@@ -25,7 +25,7 @@ def main():
     plt.savefig("images/signal_value_counts.png")
 
     # check distributions
-    X.hist(figsize=(60, 10))
+    X.hist(figsize=(60,30))
     plt.tight_layout()
     plt.savefig("images/features_distributions.png")
 
